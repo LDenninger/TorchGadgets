@@ -14,5 +14,5 @@ setuptools.setup(
     url='',
     license='MIT',
     packages=setuptools.find_packages(),
-    install_requires=['numpy', 'torch', 'torchvision', 'matplotlib', 'ipdb', 'tqdm', 'tensorboard'],
+    install_requires=['numpy', 'torch', 'torchvision', 'matplotlib', 'ipdb', 'tqdm', 'tensorboard', 'fvcore'],
 )

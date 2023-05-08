@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 
-class ConvolutionalNN(nn.Module):
+from .feature_extractor import *
+
+class NeuralNetwork(nn.Module):
     
     def __init__(self, 
                     layers: list,):
@@ -37,7 +39,7 @@ class ConvolutionalNN(nn.Module):
                                 }
         """
 
-        super(ConvolutionalNN, self).__init__()
+        super(NeuralNetwork, self).__init__()
 
         self.build_model(layers)
 
@@ -45,7 +47,15 @@ class ConvolutionalNN(nn.Module):
     def build_model(self, layer_config):
         layers = nn.ModuleList()
         for (i, layer) in enumerate(layer_config):
-            if layer["type"] == "conv2d":
+            if layer["type"] == "ResNet":
+                layers.append(ResNet(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
+            elif layer["type"] == "ConvNext":
+                layers.append(ConvNeXt(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
+            elif layer["type"] == "Vgg":
+                layers.append(VGG(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
+            elif layer["type"] == "MobileNetV3":
+                layers.append(MobileNetV3(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
+            elif layer["type"] == "conv2d":
                 layers.append(nn.Conv2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
             elif layer["type"] == "relu":
                 layers.append(nn.ReLU())
@@ -60,6 +70,8 @@ class ConvolutionalNN(nn.Module):
                 layers.append(nn.Linear(in_features=layer['in_features'], out_features=layer['out_features']))
             elif layer['type'] =='batchnorm2d':
                 layers.append(nn.BatchNorm2d(layer['num_features'], layer['eps'], layer['momentum']))
+            elif layer['type'] =='batchnorm1d':
+                layers.append(nn.BatchNorm1d(layer['num_features'], layer['eps'], layer['momentum']))
             elif layer['type'] == 'dropout':
                 layers.append(nn.Dropout(layer['prob']))
             elif layer['type'] == 'flatten':

@@ -1,2 +1,2 @@
-from .cnn import *
-from .mlp import * 
+from .NeuralNetwork import *
+from .feature_extractor import *

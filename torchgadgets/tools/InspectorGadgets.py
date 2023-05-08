@@ -1,6 +1,8 @@
 import torch
 import ipdb
 
+import inspect
+
 class InspectorGadgets():
     """
         Module that encapsulates different functions to investigate everything going on withing a Pytorch module.
