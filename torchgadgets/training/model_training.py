@@ -5,14 +5,14 @@ from ..evaluation import *
 from ..logging import *
 from .utils import *
 from .basic_training import *
-from .scheduler import Scheduler
+from .scheduler import SchedulerManager
 
 ###--- Model Specific Training Sciprts ---###
 
 def trainNN(config, 
                 model: torch.nn.Module = None,
-                    train_loader: torch.nn.DataLoader = None,
-                        test_loader: torch.nn.DataLoader = None,
+                    train_loader = None,
+                        test_loader = None,
                             criterion = None,
                                 logger: Logger = None,
                                     optimizer = None,
@@ -55,7 +55,7 @@ def trainNN(config,
 
     if scheduler is None:
         if config['scheduler'] is not None:
-            scheduler = Scheduler(optimizer, config['scheduler'])
+            scheduler = SchedulerManager(optimizer, config['scheduler'])
     if data_augmentor is None:
         data_augmentor = ImageDataAugmentor(config=config['pre_processing'])
 

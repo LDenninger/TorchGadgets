@@ -1,5 +1,7 @@
 import torch
-import tqdm
+from tqdm import tqdm
+
+from .classification_metrics import eval_resolve
 
 def run_evaluation( model: torch.nn.Module, 
                     data_augmentor,
@@ -40,7 +42,7 @@ def run_evaluation( model: torch.nn.Module,
             imgs, labels = imgs.to(device), labels.to(device)
 
             # apply preprocessing surch as flattening the imgs and create a one hot encodinh of the labels
-            imgs = data_augmentor(imgs, train=False)
+            imgs, labels = data_augmentor((imgs, labels), train=False)
 
 
             output = model(imgs)
@@ -50,13 +52,8 @@ def run_evaluation( model: torch.nn.Module,
             if criterion is not None:
                 loss = criterion(output, labels)
                 losses.append(loss.cpu().item())
-        
-        for eval_metric in config['evaluation']['metrics']:
-            func_name = '_evaluation_' + eval_metric
-            try:
-                eval_metrics[eval_metric] = globals()[func_name](torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config)
-            except:
-                print(f"NotImplemented: Evaluation metric {eval_metric}")
+
+        eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config)
 
     if criterion is None:
         return eval_metrics

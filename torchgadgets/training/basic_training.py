@@ -37,7 +37,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
 
         outputs = []
         targets = []
-        training_metrics = []
+        #training_metrics = []
 
         ###--- Training Epoch ---###
         progress_bar = tqdm(enumerate(train_loader), total=config['num_iterations'])
@@ -45,7 +45,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
             img = img.to(DEVICE)
             label = label.to(DEVICE)
             # Apply data augmentation and pre-processing
-            img = data_augmentor(img)
+            img, label = data_augmentor((img, label))
             # Zero gradients
             optimizer.zero_grad()
             # Compute output of the model
@@ -59,8 +59,8 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
             # Log training data
             if logger is not None:
                 logger.log_data(data={'train_loss': loss.cpu().float().item()}, epoch=epoch+1, iteration=i+1)
-            tr_metric = eval_resolve(output, label, config)['accuracy'][0]
-            training_metrics.append(tr_metric)
+            #tr_metric = eval_resolve(output, label, config)['accuracy'][0]
+            #raining_metrics.append(tr_metric)
             outputs.append(output.cpu().detach())
             targets.append(label.cpu().detach())
             
@@ -76,7 +76,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
 
         # Log evaluation data
         if logger is not None:
-            logger.log_data(epoch=epoch+1, data={'train_accuracy': training_metrics})
+            #logger.log_data(epoch=epoch+1, data={'train_accuracy': training_metrics})
             logger.log_data(epoch=epoch+1, data=evaluation_metrics)
             logger.log_data(epoch=epoch+1, data={'eval_loss': eval_loss})
         

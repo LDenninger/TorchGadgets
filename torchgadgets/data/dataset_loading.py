@@ -48,6 +48,8 @@ def extract_dataset(dataset: torch.utils.data.Dataset, toTensor: bool = True):
 
 
     return data, labels
+
+
     
 
 def _load(dataset_name, mode=0):

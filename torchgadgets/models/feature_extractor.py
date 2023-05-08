@@ -5,14 +5,16 @@ import torchvision.models as tv_models
 
 RESNET_FEATURE_DIM = {
     18:{
-        0: 512,
-        1: 25088,
-        2: 50176
+        0: 1000,
+        1: 512,
+        2: 25088,
+        3: 50176
     },
     50:{
-        0: 2048,
-        1: 100352,
-        2: 200704
+        0: 1000,
+        1: 2048,
+        2: 100352,
+        3: 200704
     }
 }
 
@@ -50,7 +52,7 @@ class ResNet(nn.Module):
         }
         resnet = resnet_dict[size](weights=weights)
         # remove last FC layer
-        self.resnet = nn.Sequential(*list(resnet.children())[:-(1+layer)])
+        self.resnet = nn.Sequential(*list(resnet.children())[:-(layer)])
 
     def forward(self, input_):
         out = self.resnet(input_)
@@ -84,7 +86,7 @@ class ConvNeXt(nn.Module):
         convnext = convnext_dict[size][0](weights=weights)
 
         # remove last FC layer
-        self.convnext = nn.Sequential(*list(convnext.children())[:-(1+layer)])
+        self.convnext = nn.Sequential(*list(convnext.children())[:-(layer)])
 
     def forward(self, input_):
         out = self.convnext(input_)
@@ -123,7 +125,7 @@ class VGG(nn.Module):
             }
         vgg = vgg_dict[size](weights=weights)
         # remove last FC layer
-        self.vgg = nn.Sequential(*list(vgg.children())[:-(1+layer)])
+        self.vgg = nn.Sequential(*list(vgg.children())[:-(layer)])
 
     def forward(self, input_):
         out = self.vgg(input_)
@@ -153,7 +155,7 @@ class MobileNetV3(nn.Module):
  
         mobilenet = mobilenet_dict[size](weights=weights)
         # remove last FC layer
-        self.mobilenet = nn.Sequential(*list(mobilenet.children())[:-(1+layer)])
+        self.mobilenet = nn.Sequential(*list(mobilenet.children())[:-(layer)])
 
     def forward(self, input_):
         out = self.mobilenet(input_)

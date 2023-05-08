@@ -109,13 +109,13 @@ class ImageDataAugmentor:
         return (input[0].permute(self.permute_dim), input[1])
     
     def _resize(self, input: tuple):
-        return (tv.transforms.Resize(self.resize_size)(input[0]), input[1])
+        return (self.resizer(input[0]), input[1])
     
     def _random_rotation(self, input: tuple):
         return (self.random_rotater(input[0]), input[1])
     
     def _random_horizontal_flip(self, input: tuple):
-        return (self._random_horizontal_flipper(input[0]), input[1])
+        return (self.random_horizontal_flipper(input[0]), input[1])
     
     def _gaussian_blur(self, input: tuple):
         return (self.gaussian_filter(input[0]), input[1])
@@ -136,7 +136,7 @@ class ImageDataAugmentor:
         """
         assert len(input[0].shape) == 3, 'Please provide a single image in a 3D tensor. Provided image shape: {}'.format(input[0].shape)
 
-        if input[0].shape[0] == 1:
+        if input[0].shape[0] in [1,2,3,4]:
             C, H, W = input[0].shape
         else:
             H, W, C = input[0].shape
@@ -160,8 +160,7 @@ class ImageDataAugmentor:
             The crop size is the minimum of the image height and width.
         """
         assert len(input[0].shape) == 3, 'Please provide a single image in a 3D tensor. Provided image shape: {}'.format(input[0].shape)
-
-        if input[0].shape[0] == 1:
+        if input[0].shape[0] in [1,2,3,4]:
             C, H, W = input[0].shape
         else:
             H, W, C = input[0].shape
@@ -191,6 +190,8 @@ class ImageDataAugmentor:
         if self.squeeze_dim is not None:
             return (input[0].squeeze(dim=self.squeeze_dim), input[1])
         return (input[0].squeeze(), input[1])
+    def _convert_255_to_1(self, input: tuple):
+        return (input[0] / 255., input[1])
     def _blank(self, input: tuple):
         return input
     
@@ -198,33 +199,19 @@ class ImageDataAugmentor:
         """
             Implementation of the data augmentation technique as described in: "mixup: beyond empirical risk minimization" <https://arxiv.org/pdf/1710.09412.pdf>
         """
-        def _batch_wise():
 
-            rand_index = torch.randperm(input[0].shape[0]).to(device)
-            target_pairs = input[1][rand_index]
-            batch_pairs = input[0][rand_index]
-
-            target_ohc = torch.nn.functional.one_hot(input[1], num_classes=self.mixup_classes)
-            target_pairs_ohc = torch.nn.functional.one_hot(target_pairs, num_classes=self.mixup_classes)
-
-            lam = self.mixup_beta.sample()
-
-            return (lam * input[0] + (1 - lam) * batch_pairs, lam * target_ohc + (1 - lam) * target_pairs_ohc)
-        def _single():
-            assert self.alternative_input is not None, 'Please provide alternative images before applying cutmix'
-            lam = self.mixup_beta.sample()
-            target_ohc = torch.nn.functional.one_hot(input[1], num_classes=self.mixup_classes)
-            target_pairs_ohc = torch.nn.functional.one_hot(self.alternative_input[1], num_classes=self.mixup_classes)
-            return (lam * input[0] + (1 - lam) * self.alternative_input[0], lam * target_ohc + (1 - lam) * target_pairs_ohc)
-
-
+            
         device = input[0].device
-        if len(input[0].shape)==2:
-            input = input.unsqueeze(dim=0)
-        if len(input[0].shape)==3:
-            _single()
-        if len(input[0].shape)==4:
-            _batch_wise()
+        rand_index = torch.randperm(input[0].shape[0]).to(device)
+        target_pairs = input[1][rand_index]
+        batch_pairs = input[0][rand_index]
+
+        target_ohc = torch.nn.functional.one_hot(input[1], num_classes=self.mixup_classes)
+        target_pairs_ohc = torch.nn.functional.one_hot(target_pairs, num_classes=self.mixup_classes)
+
+        lam = self.mixup_beta.sample()
+
+        return (lam * input[0] + (1 - lam) * batch_pairs, lam * target_ohc + (1 - lam) * target_pairs_ohc)
     
     def _cutmix(self, input: tuple):
         """
@@ -236,8 +223,8 @@ class ImageDataAugmentor:
             W = size[2]
             H = size[3]
             cut_rat = np.sqrt(1. - lam)
-            cut_w = np.int(W * cut_rat)
-            cut_h = np.int(H * cut_rat)
+            cut_w = int(W * cut_rat)
+            cut_h = int(H * cut_rat)
 
             # uniform
             cx = np.random.randint(W)
@@ -249,33 +236,18 @@ class ImageDataAugmentor:
             bby2 = np.clip(cy + cut_h // 2, 0, H)
 
             return bbx1, bby1, bbx2, bby2
-        def _batch_wise():
-            # generate mixed sample
-            lam = self.mixup_beta.sample()
-            rand_index = torch.randperm(input[0].shape[0]).to(device)
-            target_pairs = input[1][rand_index]
-            batch_pairs = input[0][rand_index]
-            bbx1, bby1, bbx2, bby2 = _rand_bbox(batch_pairs.shape, lam)
-            batch_pairs[:, :, bbx1:bbx2, bby1:bby2] = batch_pairs[rand_index, :, bbx1:bbx2, bby1:bby2]
-            # adjust lambda to exactly match pixel ratio
-            lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (input.size()[-1] * input.size()[-2]))
-            target = torch.nn.functional.one_hot(input[1], num_classes=self.cutmix_classes) * lam + (1 - lam) * torch.nn.functional.one_hot(target_pairs, num_classes=self.cutmix_classes)
-            return (batch_pairs, target)
-        def _single():
-            assert self.alternative_input is not None, 'Please provide alternative images before applying cutmix'
-            image = input[0]
-            lam = self.mixup_beta.sample()
-            bbx1, bby1, bbx2, bby2 = _rand_bbox(image.shape, lam)
-            image[:, bbx1:bbx2, bby1:bby2] = self.alternative_input[0][:, bbx1:bbx2, bby1:bby2]
-            target = torch.nn.functional.one_hot(input[1], num_classes=self.cutmix_classes) * lam + (1 - lam) * torch.nn.functional.one_hot(self.alternative_input[1], num_classes=self.cutmix_classes)
-            return (image.squeeze(), target)
         device = input[0].device
-        if len(input[0].shape)==2:
-            input = input.unsqueeze(dim=0)
-        if len(input[0].shape)==3:
-            _single()
-        if len(input[0].shape)==4:
-            _batch_wise()
+        # generate mixed sample
+        lam = self.cutmix_beta.sample()
+        rand_index = torch.randperm(input[0].shape[0]).to(device)
+        target_pairs = input[1][rand_index]
+        batch_pairs = input[0][rand_index]
+        bbx1, bby1, bbx2, bby2 = _rand_bbox(batch_pairs.shape, lam)
+        batch_pairs[:, :, bbx1:bbx2, bby1:bby2] = batch_pairs[rand_index, :, bbx1:bbx2, bby1:bby2]
+        # adjust lambda to exactly match pixel ratio
+        lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (input[0].shape[-1] * input[0].shape[-2]))
+        target = torch.nn.functional.one_hot(input[1], num_classes=self.cutmix_classes) * lam + (1 - lam) * torch.nn.functional.one_hot(target_pairs, num_classes=self.cutmix_classes)
+        return (batch_pairs, target)
   
     def _init_pipeline(self):
         train_augmentation = []
@@ -424,6 +396,11 @@ class ImageDataAugmentor:
                     train_augmentation.append(self._dynamic_center_crop)
                 if process_step['eval']:
                     eval_augmentation.append(self._dynamic_center_crop)
+            elif process_step['type'] == 'convert_255_to_1':
+                if process_step['train']:
+                    train_augmentation.append(self._convert_255_to_1)
+                if process_step['eval']:
+                    eval_augmentation.append(self._convert_255_to_1)
         if len(train_augmentation) == 0:
             train_augmentation.append(self._blank)
         if len(eval_augmentation) == 0:
