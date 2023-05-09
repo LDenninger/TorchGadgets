@@ -35,76 +35,76 @@ TODO: Provide complete documentation on all options.
 The architecture config is basically a list of sequential modules where each module config is defined by the dictionary.
 
 Example config:
-    ```
-         MODEL_ARCHITECTURE = [
-                {'type': 'ResNet', 'size': 18, 'remove_layer': 1, 'weights': 'DEFAULT'},
-                {'type': 'flatten'},
-                {'type': 'dropout', 'prob': 0.3},
-                {'type': 'linear', 'in_features': tg.models.RESNET_FEATURE_DIM[18][1], 'out_features': 2}
-            ]
-    ```
+
+    MODEL_ARCHITECTURE = [
+        {'type': 'ResNet', 'size': 18, 'remove_layer': 1, 'weights': 'DEFAULT'},
+        {'type': 'flatten'},
+        {'type': 'dropout', 'prob': 0.3},
+        {'type': 'linear', 'in_features': tg.models.RESNET_FEATURE_DIM[18][1], 'out_features': 2}
+    ]
+
 
 #### Scheduler Configuration
 
 Example config:
-    ```
-        SCHEDULER = {'epoch_scheduler': {'type': 'exponential', 'gamma': 0.9}, 'iteration_scheduler': None}
-    ```
+    
+    SCHEDULER = {'epoch_scheduler': {'type': 'exponential', 'gamma': 0.9}, 'iteration_scheduler': None}
+    
     
 
 #### Optimizer Configuration
 
 Example config:
-    ```
-        OPTIMIZER = {'type': 'Adam'}
-    ```
+    
+    OPTIMIZER = {'type': 'Adam'}
+    
     
 
 #### Data Augmentation Configuration
 The data augmentation config is a list that defines each processing step of our data augmentation pipeline.
 
 Example config:
-    ```
-        DATA_AUGMENTATION = [   
-            {'type': 'mixup', 'alpha': 1.0, 'prob': 0.5, 'beta': 1.0, 'num_classes': 2, 'train': True, 'eval': False},
-            {'type': 'random_rotation','degrees': 5, 'train': True, 'eval': False},
-            {'type': 'random_horizontal_flip','prob': 0.3, 'train': True, 'eval': False},
-            {'type': 'color_jitter', 'brightness': 0.4, 'contrast': 0.4, 'saturation': 0.3, 'hue': 0.0, 'train': True, 'eval': False},
-            {'type': 'gaussian_blur', 'kernel_size':(5,5), 'sigma': (0.1,2.0), 'train': True, 'eval': False},
-            {'type': 'normalize', 'train': True, 'eval': True},
-        ]
-    ```
+    
+    DATA_AUGMENTATION = [   
+        {'type': 'mixup', 'alpha': 1.0, 'prob': 0.5, 'beta': 1.0, 'num_classes': 2, 'train': True, 'eval': False},
+        {'type': 'random_rotation','degrees': 5, 'train': True, 'eval': False},
+        {'type': 'random_horizontal_flip','prob': 0.3, 'train': True, 'eval': False},
+        {'type': 'color_jitter', 'brightness': 0.4, 'contrast': 0.4, 'saturation': 0.3, 'hue': 0.0, 'train': True, 'eval': False},
+        {'type': 'gaussian_blur', 'kernel_size':(5,5), 'sigma': (0.1,2.0), 'train': True, 'eval': False},
+        {'type': 'normalize', 'train': True, 'eval': True},
+    ]
+    
 
 #### Model Configuration
 This configuration basically now bundles all previously configuration to the configuration of a single model or training run.
 
 Example config:
-    ```
-        MODEL_CONFIG = {
-            'layers': MODEL_ARCHITECTURE,
-            'output_dim': 2,
-            'activation': 'relu',
-            'batch_size': 32,
-            'num_epochs': 10,
-            'num_iterations': 0,
-            'learning_rate': 0.00003,
-            'random_seed': 22,
-            'pre_processing': DATA_AUGMENTATION,
-            'evaluation': {
-                'metrics': ['accuracy'],
-                'frequency': 1
-            },
-            'dataset': {
-                    'name': 'oxfordpets',
-                    'train_size': 2000,
-                    'val_size': 0,
-                    'test_size': 3669,
-                    'train_shuffle': True,
-                    'eval_shuffle': False,
-                    'drop_last': True,
-                    'classes': [0, 1]
-            },
-            'scheduler': SCHEDULER,
-            'optimizer': OPTIMIZER
-                            
-        }
+    
+    MODEL_CONFIG = {
+        'layers': MODEL_ARCHITECTURE,
+        'output_dim': 2,
+        'activation': 'relu',
+        'batch_size': 32,
+        'num_epochs': 10,
+        'num_iterations': 0,
+        'learning_rate': 0.00003,
+        'random_seed': 22,
+        'pre_processing': DATA_AUGMENTATION,
+        'evaluation': {
+            'metrics': ['accuracy'],
+            'frequency': 1
+        },
+        'dataset': {
+                'name': 'oxfordpets',
+                'train_size': 2000,
+                'val_size': 0,
+                'test_size': 3669,
+                'train_shuffle': True,
+                'eval_shuffle': False,
+                'drop_last': True,
+                'classes': [0, 1]
+        },
+        'scheduler': SCHEDULER,
+        'optimizer': OPTIMIZER
+                        
+    }
