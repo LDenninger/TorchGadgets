@@ -7,13 +7,13 @@ In your python environment: `python setup.py install`
 
 ## Structure
     
-TorchGadgets            # TorchGadgets Package
-    ├── data            # Data loading and processing
-    ├── evaluation      # Implementation of different evaluation metrics and complete evaluatioan scripts
-    ├── logging         # Logging of metrics and training progress   
-    ├── models          # Neural Network template class and further PyTorch models
-    ├── tools           # Useful helper functions and debugging modules
-    ├── training        # Training scripts and custom scheduler modules
+    TorchGadgets            # TorchGadgets Package
+        ├── data            # Data loading and processing
+        ├── evaluation      # Implementation of different evaluation metrics and complete evaluatioan scripts
+        ├── logging         # Logging of metrics and training progress   
+        ├── models          # Neural Network template class and further PyTorch models
+        ├── tools           # Useful helper functions and debugging modules
+        ├── training        # Training scripts and custom scheduler modules
 
 ## Usage
 
