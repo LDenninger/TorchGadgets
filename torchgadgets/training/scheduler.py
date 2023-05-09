@@ -31,19 +31,44 @@ class SchedulerManager:
         if self.iteration_scheduler is not None:
             self.iteration_scheduler.step()
 
-    #def _init_scheduler(self):
+    def get_last_lr(self):
+        if self.iteration_scheduler is not None:
+            return self.iteration_scheduler.get_last_lr()
+        if self.epoch_scheduler is not None:
+            return self.epoch_scheduler.get_last_lr()
+        return self._base_lr
 
-
-        #if self.scheduler_config['epoch_scheduler']['type']=='warmup_cosine_decay':
-        #    self.epoch_scheduler = WarmUpCosineDecayLR(self.optimizer, self.scheduler_config['warmup
-
+    def _init_scheduler(self):
+        if self.scheduler_config['epoch_scheduler'] is not None:
+            if self.scheduler_config['epoch_scheduler']['type']=='warmup_cosine_decay':
+                self.epoch_scheduler = WarmUpCosineDecayLR(self.optimizer, self.scheduler_config['epoch_scheduler']['warmup_steps'], self._num_epoch, self._base_lr)
+            elif self.scheduler_config['epoch_scheduler']['type']=='lambda':
+                self.epoch_scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer,self.scheduler_config['epoch_scheduler']['lambda'])
+            elif self.scheduler_config['epoch_scheduler']['type']=='step':
+                self.epoch_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, self.scheduler_config['epoch_scheduler']['step_size'], self.scheduler_config['epoch_scheduler']['gamma'])
+            elif self.scheduler_config['epoch_scheduler']['type']=='exponential':
+                self.epoch_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, self.scheduler_config['epoch_scheduler']['gamma'])
+            
+        if self.scheduler_config['iteration_scheduler'] is not None:
+            if self.scheduler_config['iteration_scheduler']['type']=='warmup_cosine_decay':
+                self.iteration_scheduler = WarmUpCosineDecayLR(self.optimizer, self.scheduler_config['iteration_scheduler']['warmup_steps'], self._num_iterations, self._base_lr)
+            elif self.scheduler_config['epoch_scheduler']['type']=='lambda':
+                self.iteration_scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer,self.scheduler_config['epoch_scheduler']['lambda'])
+            elif self.scheduler_config['epoch_scheduler']['type']=='step':
+                self.iteration_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, self.scheduler_config['epoch_scheduler']['step_size'], self.scheduler_config['epoch_scheduler']['gamma'])
+            elif self.scheduler_config['epoch_scheduler']['type']=='exponential':
+                self.iteration_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, self.scheduler_config['epoch_scheduler']['gamma'])
+                
 
 class  WarmUpCosineDecayLR():
     def __init__(self, optimizer, warmup_steps, num_steps, base_lr) -> None:
         self.warmup_steps = warmup_steps
         self.num_steps = num_steps
         self.base_lr = base_lr
+        self.last_lr = base_lr
         self._step = 0
+        self.optimizer = optimizer
+        self.set_learning_rate(self._warmup_cosine_decay(1))
 
     def step(self):
         self._step += 1
@@ -51,11 +76,15 @@ class  WarmUpCosineDecayLR():
         self.set_learning_rate(learning_rate)
 
     def set_learning_rate(self, learning_rate):
+        self.last_lr = learning_rate
         for g in self.optimizer.param_groups:
             g['lr'] = learning_rate
 
     def set_base_lr(self, base_lr):
         self.base_lr = base_lr
+
+    def get_last_lr(self):
+        return self.last_lr
 
     def _warmup_cosine_decay(self, step):
         """

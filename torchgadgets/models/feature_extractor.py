@@ -27,6 +27,22 @@ CONVNEXT_FEATURE_DIM = {
     }
 }
 
+VGG_FEATURE_DIM = {
+    11: {
+        0: 1000,
+        1: 25088,
+        2: 25088,
+        3: 115200
+    }
+}
+
+MOBILENETV3_FEATURE_DIM = {
+    'small': {
+        1: 576
+    }
+
+}
+
 class ResNet(nn.Module):
     """
         Class that bundles the ResNet architecture in different configurations.
@@ -75,7 +91,7 @@ class ConvNeXt(nn.Module):
     """
 
     def __init__(self, size='tiny', layer=1, weights='DEFAULT'):
-        super(ResNet, self).__init__()
+        super(ConvNeXt, self).__init__()
         assert size in ['tiny','small', 'base', 'large'], 'Please provide a valid size from: tiny, small, base, large'
         convnext_dict = {
             'tiny': tv_models.convnext_tiny,
@@ -107,7 +123,7 @@ class VGG(nn.Module):
     """
 
     def __init__(self, size=11, batch_norm=False, layer=1, weights='DEFAULT'):
-        super(ResNet, self).__init__()
+        super(VGG, self).__init__()
         assert size in [11, 13, 16, 19], 'Please provide a valid size from: 11, 13, 16, 19'
         if not batch_norm:
             vgg_dict = {
@@ -146,8 +162,8 @@ class MobileNetV3(nn.Module):
     """
 
     def __init__(self, size='small', layer=1, weights='DEFAULT'):
-        super(ResNet, self).__init__()
-        assert size in [11, 13, 16, 19], 'Please provide a valid size from: 11, 13, 16, 19'
+        super(MobileNetV3, self).__init__()
+        assert size in ['small', 'large'], 'Please provide a valid size from: small, large'
         mobilenet_dict = {
             'small': tv_models.mobilenet_v3_small,
             'large': tv_models.mobilenet_v3_large,
@@ -155,10 +171,39 @@ class MobileNetV3(nn.Module):
  
         mobilenet = mobilenet_dict[size](weights=weights)
         # remove last FC layer
-        self.mobilenet = nn.Sequential(*list(mobilenet.children())[:-(layer)])
+        if layer!=0:
+            self.mobilenet = nn.Sequential(*list(mobilenet.children())[:-(layer)])
+        else:
+            self.mobilenet = nn.Sequential(*list(mobilenet.children()))
 
     def forward(self, input_):
         out = self.mobilenet(input_)
         out = out.view(out.shape[0], -1)
         return out
     
+class VisualTransformer(nn.Module):
+    def __init__(self, size='b_16', layer=1, weights='DEFAULT'):
+        super(VisualTransformer, self).__init__()
+        assert size in ['b_16', 'b_32', 'l_16', 'l_32', 'l_16', 'l_32', 'h_14'], 'Please provide a valid size from: small, large'
+        vit_dict = {
+            'b_16': tv_models.vit_b_16,
+            'b_32': tv_models.vit_b_32,
+            'l_16': tv_models.vit_l_16,
+            'l_32': tv_models.vit_l_32,
+            'l_16': tv_models.vit_l_16,
+            'l_32': tv_models.vit_l_32,
+            'h_14': tv_models.vit_h_14
+
+        }
+ 
+        vit = vit_dict[size](weights=weights)
+        # remove last FC layer
+        if layer!=0:
+            self.vit = nn.Sequential(*list(vit.children())[:-(layer)])
+        else:
+            self.vit = nn.Sequential(*list(vit.children()))
+
+    def forward(self, input_):
+        out = self.vit(input_)
+        out = out.view(out.shape[0], -1)
+        return out

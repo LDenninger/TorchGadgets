@@ -42,6 +42,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
         ###--- Training Epoch ---###
         progress_bar = tqdm(enumerate(train_loader), total=config['num_iterations'])
         for i, (img, label) in progress_bar:
+            
             img = img.to(DEVICE)
             label = label.to(DEVICE)
             # Apply data augmentation and pre-processing
@@ -65,10 +66,11 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
             targets.append(label.cpu().detach())
             
             progress_bar.set_description(f'Loss: {loss.cpu().item():.4f}')
-
-        if scheduler is not None:
-            # Learning rate scheduler takes a step
-            scheduler.step()
+            
+            if scheduler is not None:
+                # Learning rate scheduler takes a step
+                scheduler.step(i+1)
+        
         
         ###--- Evaluation Epoch ---###
         if epoch % evaluation_config['frequency'] == 0:

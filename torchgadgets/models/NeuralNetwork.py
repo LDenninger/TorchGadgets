@@ -40,6 +40,7 @@ class NeuralNetwork(nn.Module):
         """
 
         super(NeuralNetwork, self).__init__()
+        self.backbone = None
 
         self.build_model(layers)
 
@@ -48,13 +49,18 @@ class NeuralNetwork(nn.Module):
         layers = nn.ModuleList()
         for (i, layer) in enumerate(layer_config):
             if layer["type"] == "ResNet":
-                layers.append(ResNet(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
+                self.backbone = ResNet(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights'])
+                layers.append(self.backbone)
             elif layer["type"] == "ConvNext":
-                layers.append(ConvNeXt(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
-            elif layer["type"] == "Vgg":
+                self.backbone = ConvNeXt(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights'])
+                layers.append(self.backbone)
+            elif layer["type"] == "VGG":
                 layers.append(VGG(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
             elif layer["type"] == "MobileNetV3":
-                layers.append(MobileNetV3(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights']))
+                self.backbone = MobileNetV3(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights'])
+                layers.append(self.backbone)
+            elif layer["type"] == "ViT":
+                self.backbone = VisualTransformer(size=layer['size'], layer=layer['remove_layer'], weights=layer['weights'])
             elif layer["type"] == "conv2d":
                 layers.append(nn.Conv2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
             elif layer["type"] == "relu":
@@ -83,4 +89,13 @@ class NeuralNetwork(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
-        
+    
+    def freeze_backbone_model(self):
+        assert self.backbone is not None, 'No backbone model defined'
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+    
+    def unfreeze_backbone_model(self):
+        assert self.backbone is not None, 'No backbone model defined'
+        for param in self.backbone.parameters():
+            param.requires_grad = True

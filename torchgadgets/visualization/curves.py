@@ -1,8 +1,14 @@
+import torch
+import torch.nn as nn
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 from .plotting_utils import smooth_curve
+
+from ..training import initialize_optimizer, SchedulerManager
+from ..models import NeuralNetwork
 
 def visualize_training_results(logger, config: dict):
 
@@ -49,10 +55,59 @@ def visualize_training_results(logger, config: dict):
     ax4.set_xlabel("# Iteration")
     ax4.set_ylabel("Accuracy")
     ax4.set_ylim(0.0,1.0)
-    ax4.set_yticks(np.arange(0.0, 1.1, 0.1).tolist())
+    ax4.yticks(np.arange(0.0, 1.1, 0.1).tolist())
     ax4.set_title('Evaluation Accuracy')
 
     return fig
+
+def compare_training_results(logger_list: list, model_names: list, config: dict):
+    assert len(logger_list)==len(model_names), f'Length of logger list {len(logger_list)} does not correspond to the length of the mode list {len(model_names)}'
+    #iteration_corrected = [np.sum(np.arange(i)*config['num_iterations']) for i in range(config['num_epochs']+1)]
+    xticks = range(0, config['num_epochs']*config['num_iterations'], config['num_iterations'])
+    plt.style.use('seaborn-v0_8')
+    # Load the data from the MLP training
+    data = []
+    train_loss = []
+    eval_loss = []
+    eval_acc = []
+    for logger in logger_list:
+        data = logger.get_log()
+        train_loss.append(data['train_loss'])
+        eval_loss.append(data['eval_loss'])
+        eval_acc.append(data['accuracy'])
+    fig = plt.figure(figsize=(12,15))
+
+    ax1 = fig.add_subplot(311)
+    for i in range(len(logger_list)):
+        smooth_loss = smooth_curve(train_loss[i], 31)
+        ax1.plot(smooth_loss, label=model_names[i], linewidth=2)
+
+    ax1.set_xlabel("# Epochs")
+    ax1.set_xticks(xticks, np.arange(1, config['num_epochs']+1))
+    ax1.set_ylabel("CrossEntropy Loss")
+    ax1.set_title('Training Loss')
+    ax1.legend()
+
+    ax2 = fig.add_subplot(312)
+    for i in range(len(logger_list)):
+        ax2.plot(eval_loss[i], label=model_names[i], linewidth=2)
+
+    ax2.set_xlabel("# Epochs")
+    ax2.set_ylabel("CrossEntropy Loss")
+    ax2.set_title('Evaluation Loss')
+    ax2.legend()
+
+    ax3 = fig.add_subplot(313)
+    for i in range(len(logger_list)):
+        ax3.plot(eval_acc[i], label=model_names[i], linewidth=2)
+
+    ax3.set_ylim(0.0,1.0)
+    ax3.set_yticks(np.arange(0.0, 1.1, 0.1).tolist())
+    ax3.set_xlabel("# Iteration")
+    ax3.set_ylabel("Accuracy")
+    ax3.set_title(' Evaluation Accuracy')
+    ax3.legend()
+
 
 def visualize_convolution(image, kernels, outputs, layer_names, layer_types=None, random=True, num_kernels=5):
     """
@@ -175,5 +230,34 @@ def visualize_convolution(image, kernels, outputs, layer_names, layer_types=None
                 #ax3 = fig.add_subplot(figure_grid[:,k])
                 #ax3.set_title(f'Layer {layer_names[k-2]}')
     figure_grid.tight_layout(fig)
+
+    return fig
+
+def visualize_scheduler(config):
+
+    xticks = range(0, config['num_epochs']*config['num_iterations'], config['num_iterations'])
+
+    model = NeuralNetwork(config['layers'])
+    optimizer = initialize_optimizer(model, config)
+    scheduler = SchedulerManager(optimizer, config)
+    learning_rates = []
+
+    for e in range(config['num_epochs']):
+        for i in range(config['num_iterations']):
+            scheduler.step(i)
+            learning_rates.append(scheduler.get_last_lr())
+    if type(learning_rates[0]) == list:
+        learning_rates = [l[0] for l in learning_rates]
+    smooth_lr = tg.visualization.smooth_curve(learning_rates, 20)
+    fig = plt.figure(figsize=(10,5))
+    ax = fig.add_subplot(111)
+    ax.plot(smooth_lr, c='red')
+    ax.set_xlabel('# Epochs')
+    ax.set_xticks(xticks, np.arange(1, config['num_epochs']+1))
+    ax.set_ylabel('Learning rate')
+    ax.set_title('Learning Rate Schedule')
+    ax.grid(True)
+    ax.set_yscale('linear')
+    ax.set_xscale('linear')
 
     return fig

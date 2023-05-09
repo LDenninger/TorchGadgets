@@ -200,7 +200,6 @@ class ImageDataAugmentor:
             Implementation of the data augmentation technique as described in: "mixup: beyond empirical risk minimization" <https://arxiv.org/pdf/1710.09412.pdf>
         """
 
-            
         device = input[0].device
         rand_index = torch.randperm(input[0].shape[0]).to(device)
         target_pairs = input[1][rand_index]

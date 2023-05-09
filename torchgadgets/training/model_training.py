@@ -30,6 +30,10 @@ def trainNN(config,
     ###-- Initialization ---###
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    if config['num_iterations'] == 0:
+        config['num_iterations'] = config['dataset']['train_size'] // config['batch_size']
+        config['num_iterations'] += 0 if config['dataset']['drop_last'] else 1 
+
     # Build Model from config
     if model is None:
         model = NeuralNetwork(config['layers'])
@@ -55,13 +59,10 @@ def trainNN(config,
 
     if scheduler is None:
         if config['scheduler'] is not None:
-            scheduler = SchedulerManager(optimizer, config['scheduler'])
+            scheduler = SchedulerManager(optimizer, config)
     if data_augmentor is None:
         data_augmentor = ImageDataAugmentor(config=config['pre_processing'])
 
-    if config['num_iterations'] == 0:
-        config['num_iterations'] = config['dataset']['train_size'] // config['batch_size']
-        config['num_iterations'] += 0 if config['dataset']['drop_last'] else 1
 
     train_model(model=model, 
                     config=config, 
