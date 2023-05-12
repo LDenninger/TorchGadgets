@@ -11,8 +11,12 @@ import copy
 
 
 class ImageDataset(torch.utils.data.Dataset):
+    """
+        A simple wrapper class for PyTorch datasets to add some further functionalities.
+    
+    """
     def __init__(self, dataset: torch.utils.data.Dataset, transforms: list = None, train_set: bool = True):
-        self.images, self.labels = extract_dataset(dataset)
+        self.dataset = dataset
         self.data_augmentor = None
         self.train_set = train_set
         self.reset_filter()
@@ -21,7 +25,7 @@ class ImageDataset(torch.utils.data.Dataset):
             self.data_augmentor = ImageDataAugmentor(transforms)
 
     def __getitem__(self, index):
-        image, label = (self.images[index], self.labels[index] ) if not self.filter else (self.images[self.filter_inds[index]], self.filter_labels[self.filter_inds[index]])
+        image, label = self.dataset[index] if not self.filter else (self.dataset[self.filter_ind[index]][0], self.filter_labels[self.filter_inds[index]])
         if self.data_augmentor is not None:
             image, label = self.data_augmentor((image, label), self.train_set)
         return image, label
@@ -42,7 +46,7 @@ class ImageDataset(torch.utils.data.Dataset):
         self.filter_inds = torch.arange(0, len(self.labels))
     
     def __len__(self):
-        return len(self.images) if not self.filter else len(self.filter_inds)
+        return len(self.dataset) if not self.filter else len(self.filter_inds)
 
 """
     Data Augmentation Module:
