@@ -80,7 +80,7 @@ def trainNN(config,
         return logger
     
 ###--- Model Specific Optimization Scripts ---###
-def optimizeNN(config, trial, score_metric='accuracy'):
+def optimizeNN(config, trial, train_loader=None, test_loader= None, scheduler=None, score_metric='accuracy'):
 
     def __train():
         ###--- Hyperparameters ---###
@@ -119,10 +119,10 @@ def optimizeNN(config, trial, score_metric='accuracy'):
                 outputs.append(output.cpu().detach())
                 targets.append(label.cpu().detach())
                 
-            if scheduler is not None:
-                # Learning rate scheduler takes a step
-                scheduler.step()
-            
+                if scheduler is not None:
+                    # Learning rate scheduler takes a step
+                    scheduler.step(i+1)
+                
             ###--- Evaluation Epoch ---###
             if epoch % evaluation_config['frequency'] == 0:
                 evaluation_metrics, eval_loss = run_evaluation(model,data_augmentor,test_loader,config, criterion, suppress_output=True)
@@ -143,18 +143,23 @@ def optimizeNN(config, trial, score_metric='accuracy'):
     model = NeuralNetwork(config['layers'])
     model = model.to(device)
 
-    # Initializae the data loaders
-    train_loader, test_loader = get_train_loaders(config)
+    if train_loader is None or test_loader is None:
+        t1, t2 = get_train_loaders(config)
+        if train_loader is None:
+            train_loader = t1
+        if test_loader is None:
+            test_loader = t2
 
     # Define criterion for the loss
     criterion = initialize_loss(config)
 
     # Scheduler
-    scheduler = None
+    if scheduler is None:
+        if config['scheduler'] is not None:
+            scheduler = SchedulerManager(optimizer, config)
 
     # Define optimizer
     optimizer = initialize_optimizer(model, config)
-
 
     data_augmentor = ImageDataAugmentor(config=config['pre_processing'])
 
