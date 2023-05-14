@@ -80,7 +80,7 @@ def trainNN(config,
         return logger
     
 ###--- Model Specific Optimization Scripts ---###
-def optimize_cnn(config, trial, score_metric='accuracy'):
+def optimizeNN(config, trial, score_metric='accuracy'):
 
     def __train():
         ###--- Hyperparameters ---###
