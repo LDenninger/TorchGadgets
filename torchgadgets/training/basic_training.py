@@ -59,7 +59,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
             optimizer.step()
             # Log training data
             if logger is not None:
-                logger.log_data(data={'train_loss': loss.cpu().float().item()}, epoch=epoch+1, iteration=i+1)
+                logger.log_data(data={'train_loss': loss.cpu().float().item()}, epoch=epoch+1, iteration=i+1, model = model, optimizer = optimizer)
             #tr_metric = eval_resolve(output, label, config)['accuracy'][0]
             #raining_metrics.append(tr_metric)
             outputs.append(output.cpu().detach())

@@ -8,7 +8,8 @@ from pathlib import Path as P
 
 class Logger():
     def __init__(self,
-                save_dir = None,
+                log_dir = None,
+                checkpoint_dir = None,
                     log_name: str = None,
                         model_config: dict = None,
                             writer: SummaryWriter = None,
@@ -28,16 +29,17 @@ class Logger():
                 save_internal (bool): Whether to save the logs internally in a dictionary.
         """ 
         # Save directory
-        self.save_dir = save_dir
+        self.log_dir = log_dir
+        self.checkpoint_dir = checkpoint_dir
         
         ### Run Information ###
         self.log_name = log_name
         self.writer = writer
         # Enable logging to TensorBoard
         if save_external:
-            assert save_dir is not None or self.writer is not None, "Path to save tensorboard logs has to be specified..."
+            assert log_dir is not None or self.writer is not None, "Path to save tensorboard logs has to be specified..."
             if self.writer is None:
-                self.writer = SummaryWriter(log_dir=self.save_dir) if log_name is None else SummaryWriter(log_dir=self.save_dir, filename_suffix=log_name)
+                self.writer = SummaryWriter(log_dir=self.log_dir) if log_name is None else SummaryWriter(log_dir=self.log_dir, filename_suffix=log_name)
 
         self.model_config = model_config
 
@@ -46,10 +48,8 @@ class Logger():
         self._internal_log = {}
 
         self.log_gradients = False
-
         
-        
-    def log_data(self, epoch: int, data: dict,  iteration: int=None):
+    def log_data(self, epoch: int, data: dict, model = None, optimizer=None, iteration: int=None):
         """
             Log the data.
             Arguments:
@@ -84,6 +84,9 @@ class Logger():
             
         if self.save_internal:
             self._save_internal(data)
+
+        if epoch % self.model_config['save_frequency'] == 0 and model is not None and (iteration is None or iteration==self.config['num_iterations']):
+            self._save_checkpoint(epoch, model, optimizer=optimizer)
     
     def get_log(self):
         """
@@ -118,3 +121,10 @@ class Logger():
                 self._internal_log[key] += value
                 continue
             self._internal_log[key].append(value)
+    
+    def _save_checkpoint(self, epoch, model, optimizer=None):
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict() if optimizer is not None else None,
+        }, self.checkpoint_dir)

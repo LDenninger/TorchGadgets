@@ -19,7 +19,7 @@ class ImageDataset(torch.utils.data.Dataset):
         self.dataset = dataset
         self.data_augmentor = None
         self.train_set = train_set
-        self.reset_filter()
+        self.filter = False
 
         if transforms is not None:
             self.data_augmentor = ImageDataAugmentor(transforms)
