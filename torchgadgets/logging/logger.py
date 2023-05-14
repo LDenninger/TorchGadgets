@@ -129,4 +129,4 @@ class Logger():
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict() if optimizer is not None else None,
-        }, self.checkpoint_dir)
+        }, os.path.join(self.checkpoint_dir, f"checkpoint_{epoch}.pth"))
