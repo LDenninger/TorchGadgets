@@ -17,15 +17,17 @@ In your python environment: `python setup.py install`
 
 ## Usage
 
+TODO: Describe all modules
+
 The main idea is that we can define config dictionaries for each module of the training pipeline (model, optimizer, scheduler, data augmentation etc.) and leave everything else to the package.
 For further elaboration on the configuration data structres, please look into the section "Configuration Structures". Most functions typically just take the configuration as a parameter and do not require any external definition of modules. If however one wants to use different modules than defined through the config, it is typically possible to also pass the module as a parameter preventing TorchGadgets from initializing the module from the config.
 
 ### Model Training
-
 Train a model: `logger = torchgadgets.training.trainNN(config=MODEL_CONFIG)`
  - The returned logger module saved all information from the training and can be used to visualize or compare the training of the model
 
-
+### Inspector Gadgets
+This is the debugging tool of the package using the IPDB debugger. It can be used to set breakpoints in the forwartd and backward pass or to log weights and activations.
 
 ## Configuration Structures
 

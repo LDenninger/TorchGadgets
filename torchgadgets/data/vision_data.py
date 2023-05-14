@@ -194,8 +194,13 @@ class ImageDataAugmentor:
         if self.squeeze_dim is not None:
             return (input[0].squeeze(dim=self.squeeze_dim), input[1])
         return (input[0].squeeze(), input[1])
+    
     def _convert_255_to_1(self, input: tuple):
         return (input[0] / 255., input[1])
+    
+    def _toTensor(self, input: tuple):
+        return (self.tensorTransformer(input[0]), input[1])
+    
     def _blank(self, input: tuple):
         return input
     
@@ -404,6 +409,12 @@ class ImageDataAugmentor:
                     train_augmentation.append(self._convert_255_to_1)
                 if process_step['eval']:
                     eval_augmentation.append(self._convert_255_to_1)
+            elif process_step['type'] == 'toTensor':
+                self.tensorTransformer = tv.transforms.ToTensor()
+                if process_step['train']:
+                    train_augmentation.append(self._toTensor)
+                if process_step['eval']:
+                    eval_augmentation.append(self._toTensor)
         if len(train_augmentation) == 0:
             train_augmentation.append(self._blank)
         if len(eval_augmentation) == 0:

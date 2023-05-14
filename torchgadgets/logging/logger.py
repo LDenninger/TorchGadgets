@@ -85,7 +85,7 @@ class Logger():
         if self.save_internal:
             self._save_internal(data)
 
-        if epoch % self.model_config['save_frequency'] == 0 and model is not None and (iteration is None or iteration==self.config['num_iterations']):
+        if epoch >= self.model_config['save_start'] and epoch % self.model_config['save_frequency'] == 0 and model is not None and (iteration is None or iteration==self.model_config['num_iterations']):
             self._save_checkpoint(epoch, model, optimizer=optimizer)
     
     def get_log(self):

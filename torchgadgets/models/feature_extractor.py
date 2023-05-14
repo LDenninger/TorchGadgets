@@ -15,6 +15,10 @@ RESNET_FEATURE_DIM = {
         1: 2048,
         2: 100352,
         3: 200704
+    },
+    101:{
+        0: 1000,
+        1: 2048
     }
 }
 
@@ -24,8 +28,26 @@ CONVNEXT_FEATURE_DIM = {
         1: 768,
         2: 37632,
         3: 75264,
-    }
+    },
+    "small": {
+        0: 1000,
+        1: 768,
+        2: 37632,
+
+    },
+    "base": {
+        0: 1000,
+        1: 1024,
+        2: 50176
+    },
+    "large": {
+        0: 1000,
+        1: 1536,
+        2: 75264
+    },
+
 }
+
 
 VGG_FEATURE_DIM = {
     11: {
@@ -99,7 +121,7 @@ class ConvNeXt(nn.Module):
             'base': tv_models.convnext_base,
             'large': tv_models.convnext_large
         }
-        convnext = convnext_dict[size][0](weights=weights)
+        convnext = convnext_dict[size](weights=weights)
 
         # remove last FC layer
         self.convnext = nn.Sequential(*list(convnext.children())[:-(layer)])
