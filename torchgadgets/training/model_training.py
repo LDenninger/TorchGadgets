@@ -153,13 +153,15 @@ def optimizeNN(config, trial, train_loader=None, test_loader= None, scheduler=No
     # Define criterion for the loss
     criterion = initialize_loss(config)
 
+
+
+    # Define optimizer
+    optimizer = initialize_optimizer(model, config)
+
     # Scheduler
     if scheduler is None:
         if config['scheduler'] is not None:
             scheduler = SchedulerManager(optimizer, config)
-
-    # Define optimizer
-    optimizer = initialize_optimizer(model, config)
 
     data_augmentor = ImageDataAugmentor(config=config['pre_processing'])
 

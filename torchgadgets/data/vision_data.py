@@ -402,7 +402,6 @@ class ImageDataAugmentor:
                     train_augmentation.append(self._random_vertical_flip)
                 if process_step['eval']:
                     eval_augmentation.append(self._random_vertical_flip)
-                    
             elif process_step['type'] == 'center_crop':
                 self.center_cropper = tv.transforms.CenterCrop(process_step['size'])
                 if process_step['train']:
