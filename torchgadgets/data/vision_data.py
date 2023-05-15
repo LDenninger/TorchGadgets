@@ -121,6 +121,9 @@ class ImageDataAugmentor:
     def _random_horizontal_flip(self, input: tuple):
         return (self.random_horizontal_flipper(input[0]), input[1])
     
+    def _random_vertical_flip(self, input: tuple):
+        return (self.random_vertical_flipper(input[0]), input[1])
+    
     def _gaussian_blur(self, input: tuple):
         return (self.gaussian_filter(input[0]), input[1])
 
@@ -393,6 +396,13 @@ class ImageDataAugmentor:
                     train_augmentation.append(self._random_horizontal_flip)
                 if process_step['eval']:
                     eval_augmentation.append(self._random_horizontal_flip)
+            elif process_step['type'] == 'random_vertical_flip':
+                self.random_vertical_flipper = tv.transforms.RandomVerticalFlip(p=process_step['prob'])
+                if process_step['train']:
+                    train_augmentation.append(self._random_vertical_flip)
+                if process_step['eval']:
+                    eval_augmentation.append(self._random_vertical_flip)
+                    
             elif process_step['type'] == 'center_crop':
                 self.center_cropper = tv.transforms.CenterCrop(process_step['size'])
                 if process_step['train']:
