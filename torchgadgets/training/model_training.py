@@ -105,7 +105,7 @@ def optimizeNN(config, trial, train_loader=None, test_loader= None, scheduler=No
                 img = img.to(DEVICE)
                 label = label.to(DEVICE)
                 # Apply data augmentation and pre-processing
-                img = data_augmentor(img)
+                img, label = data_augmentor((img, label))
                 # Zero gradients
                 optimizer.zero_grad()
                 # Compute output of the model
