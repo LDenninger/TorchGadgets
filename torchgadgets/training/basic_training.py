@@ -17,7 +17,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
     ###--- Initial Evaluation ---###
     # Evaluate the untrained model to have some kind of base line for the training progress
     print('Initial Evluation')
-    evaluation_metrics, eval_loss = run_evaluation(model,data_augmentor,val_loader,config, criterion, suppress_output=False)
+    evaluation_metrics, eval_loss = run_evaluation(model,data_augmentor,val_loader,config=config, criterion=criterion, suppress_output=False)
 
     # Log evaluation data
     if logger is not None:
@@ -74,7 +74,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
         
         ###--- Evaluation Epoch ---###
         if epoch % evaluation_config['frequency'] == 0:
-            evaluation_metrics, eval_loss = run_evaluation(model,data_augmentor,val_loader,config, criterion, suppress_output=False)
+            evaluation_metrics, eval_loss = run_evaluation(model,data_augmentor,val_loader,config, criterion=criterion, suppress_output=False)
 
         # Log evaluation data
         if logger is not None:

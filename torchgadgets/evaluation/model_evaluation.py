@@ -54,7 +54,7 @@ def run_evaluation( model: torch.nn.Module,
                 loss = criterion(output, labels)
                 losses.append(loss.cpu().item())
 
-        eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config, metrics=evaluation_metrics)
+        eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)
 
     if criterion is None:
         return eval_metrics

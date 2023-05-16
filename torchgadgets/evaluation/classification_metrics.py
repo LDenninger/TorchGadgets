@@ -1,7 +1,7 @@
 import torch
 
 import numpy as np
-from sklearn.metrics import confusion_matrix, top_k_accuracy_score
+from sklearn.metrics import confusion_matrix, top_k_accuracy_score, precision_score, recall_score, f1_score
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ def _data_eliminate_batch(data):
     assert type(data) == list or torch.is_tensor(data), f'Data of type {type(data)} is not supported'
     if type(data) == list:
         data = _extract_data_from_list(data)
-    if len(data.shape)==2:
+    if len(data.shape)==1:
         return data
     data = torch.flatten(data, start_dim=0, end_dim=1)
     return data
@@ -48,7 +48,6 @@ def eval_resolve(output, target, config: dict, metrics=None):
     
     if metrics is None:
         metrics = config['evaluation']['metrics']
-
     for eval_metric in metrics:
             func_name = '_evaluation_' + eval_metric
             try:
@@ -96,7 +95,7 @@ class EvaluationMetrics:
         """
         output = _data_eliminate_batch(output)
         target = _data_eliminate_batch(target)
-        top3_acc = top_k_accuracy_score(output, target, k=3)
+        top3_acc = top_k_accuracy_score(target, output, k=3)
 
         return [top3_acc]
     
@@ -113,7 +112,7 @@ class EvaluationMetrics:
         """
         output = _data_eliminate_batch(output)
         target = _data_eliminate_batch(target)
-        top5_acc = top_k_accuracy_score(output, target, k=5)
+        top5_acc = top_k_accuracy_score(target, output, k=5)
 
         return [top5_acc]
 
@@ -129,24 +128,18 @@ class EvaluationMetrics:
             Returns:
                 float: The precision of the given model on the given dataset.
         """
-        assert 'classes' in config['evaluation']
+        assert 'classes' in config['dataset']
+
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         
         # Discrete set of classes for the classification task
-        CLASSES = config['evaluation']['classes']
+        CLASSES = config['dataset']['classes']
         _, predicted = torch.max(output.data, -1)
 
-        if len(predicted.shape)==2 and len(target.shape)==2:
-            predicted = torch.flatten(predicted)
-            target = torch.flatten(target)
+        precision = precision_score(target, predicted, labels=CLASSES, average='macro')
 
-        class_precision = []
-
-        for label in CLASSES:
-            tp = ( (predicted == label) and (target == label) ).sum().item()
-            fp = ( (predicted == label) and (target!= label) ).sum().item()
-            class_precision.append(tp / (tp + fp))
-
-        return [sum(class_precision) / len(class_precision)]
+        return [precision]
 
     def _evaluation_precision_per_class(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
         """
@@ -159,24 +152,18 @@ class EvaluationMetrics:
             Returns:
                 float: The precision of the given model on the given dataset.
         """
-        assert 'classes' in config['evaluation']
+        assert 'classes' in config['dataset']
+
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         
         # Discrete set of classes for the classification task
-        CLASSES = config['evaluation']['classes']
+        CLASSES = config['dataset']['classes']
         _, predicted = torch.max(output.data, -1)
 
-        if len(predicted.shape)==2 and len(target.shape)==2:
-            predicted = torch.flatten(predicted)
-            target = torch.flatten(target)
+        precision = precision_score(target, predicted, labels=CLASSES)
 
-        class_precision = []
-
-        for label in CLASSES:
-            tp = ( (predicted == label) and (target == label) ).sum().item()
-            fp = ( (predicted == label) and (target!= label) ).sum().item()
-            class_precision.append(tp / (tp + fp))
-
-        return class_precision
+        return precision.tolist()
 
 
     def _evaluation_recall(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
@@ -190,24 +177,18 @@ class EvaluationMetrics:
             Returns:
                 float: The recall of the given model on the given dataset.
         """
-        assert 'classes' in config['evaluation']
+        assert 'classes' in config['dataset']
+
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         
         # Discrete set of classes for the classification task
-        CLASSES = config['evaluation']['classes']
-        _, predicted = torch.max(output.data, 1)
+        CLASSES = config['dataset']['classes']
+        _, predicted = torch.max(output.data, -1)
 
-        if len(predicted.shape)==2 and len(target.shape)==2:
-            predicted = torch.flatten(predicted)
-            target = torch.flatten(target)
+        recall = recall_score(target, predicted, labels=CLASSES, average='macro')
 
-        class_recall = []
-
-        for label in CLASSES:
-            tp = ((predicted == label) and (target == label) ).sum().item()
-            fn = ( (predicted != label) and (target == label) ).sum().item()
-            class_recall.append(tp / (tp + fn))
-
-        return [sum(class_recall) / len(class_recall)]
+        return [recall]
 
     def _evaluation_recall_per_class(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
         """
@@ -220,24 +201,18 @@ class EvaluationMetrics:
             Returns:
                 float: The recall of the given model on the given dataset.
         """
-        assert 'classes' in config['evaluation']
+        assert 'classes' in config['dataset']
+
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         
         # Discrete set of classes for the classification task
-        CLASSES = config['evaluation']['classes']
-        _, predicted = torch.max(output.data, 1)
+        CLASSES = config['dataset']['classes']
+        _, predicted = torch.max(output.data, -1)
 
-        if len(predicted.shape)==2 and len(target.shape)==2:
-            predicted = torch.flatten(predicted)
-            target = torch.flatten(target)
+        recall = recall_score(target, predicted, labels=CLASSES)
 
-        class_recall = []
-
-        for label in CLASSES:
-            tp = ((predicted == label) and (target == label) ).sum().item()
-            fn = ( (predicted!= label) and (target == label) ).sum().item()
-            class_recall.append(tp / (tp + fn))
-
-        return class_recall
+        return recall
     
     def _evaluation_f1(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
         """
@@ -250,17 +225,45 @@ class EvaluationMetrics:
             Returns:
                 float: The F1 score of the given model on the given dataset.
         """
-        assert 'classes' in config['evaluation']
+        assert 'classes' in config['dataset']
+
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         
         # Discrete set of classes for the classification task
-        precision = self._evaluation_precision(output, target, config)[0]
-        recall = self._evaluation_recall(output, target, config)[0]
+        CLASSES = config['dataset']['classes']
+        _, predicted = torch.max(output.data, -1)
 
-        f1 = 2 * precision * recall / (precision + recall)
+        f1 = f1_score(target, predicted, labels=CLASSES, average='macro')
 
         return [f1]
+    
+    def _evaluation_f1_per_class(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
+        """
+            Computes the F1 score of the the predictions given the target.
+
+            Arguments:
+                output (torch.Tensor): The output of the model.
+                target (torch.Tensor): The target of the model.
+
+            Returns:
+                float: The F1 score of the given model on the given dataset.
+        """
+        assert 'classes' in config['dataset']
+
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
+        
+        # Discrete set of classes for the classification task
+        CLASSES = config['dataset']['classes']
+        _, predicted = torch.max(output.data, -1)
+
+        f1 = f1_score(target, predicted, labels=CLASSES)
+
+        return f1
 
     def _evaluation_confusion_matrix(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
+
         # Build confusion matrix
         predictions = np.argmax(output, axis=-1)
         if len(target.shape) != 1:

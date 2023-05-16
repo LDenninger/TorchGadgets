@@ -63,7 +63,7 @@ def visualize_training_results(logger, config: dict):
 def compare_training_results(logger_list: list, model_names: list, config: dict):
     assert len(logger_list)==len(model_names), f'Length of logger list {len(logger_list)} does not correspond to the length of the mode list {len(model_names)}'
     #iteration_corrected = [np.sum(np.arange(i)*config['num_iterations']) for i in range(config['num_epochs']+1)]
-    xticks = range(0, config['num_epochs']*config['num_iterations'], config['num_iterations'])
+    xticks = range(0, config['num_epochvs']*config['num_iterations'], config['num_iterations'])
     plt.style.use('seaborn-v0_8')
     # Load the data from the MLP training
     data = []
