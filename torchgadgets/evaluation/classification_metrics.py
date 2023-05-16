@@ -5,19 +5,29 @@ from sklearn.metrics import confusion_matrix, top_k_accuracy_score
 
 import pandas as pd
 
+def _extract_data_from_list(data):
+    if torch.is_tensor(d[0]):
+            return torch.stack(d)
+    return torch.stack([_extract_data_from_list(x) for x in d])
+
 def _data_to_1d_pred_tensor(data):
     assert type(data) == list or torch.is_tensor(data), f'Data of type {type(data)} is not supported'
-    def _recursive_list(d):
-        if torch.is_tensor(d[0]):
-            return torch.stack(d)
-        return torch.stack([_recursive_list(x) for x in d])
     d_s = data.shape
     if torch.is_tensor(data):
-        data = _recursive_list(data)
+        data = _extract_data_from_list(data)
     if torch.is_floating_point(data) and d_s>1:
         data = torch.argmax(data, dim=-1)
     if len(d_s) > 1:
         data = torch.flatten(data)
+
+def _data_eliminate_batch(data):
+    assert type(data) == list or torch.is_tensor(data), f'Data of type {type(data)} is not supported'
+    if type(data) == list:
+        data = _extract_data_from_list(data)
+    if len(data.shape)==2:
+        return data
+    data = torch.flatten(data, start_dim=0, end_dim=1)
+    return data
 
 def accuracy(output, target):
     output, target = _data_to_1d_pred_tensor(output), _data_to_1d_pred_tensor(target)
@@ -84,7 +94,8 @@ class EvaluationMetrics:
             Returns:
                 float: The accuracy of the given model on the given dataset.
         """
-
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         top3_acc = top_k_accuracy_score(output, target, k=3)
 
         return [top3_acc]
@@ -100,7 +111,8 @@ class EvaluationMetrics:
             Returns:
                 float: The accuracy of the given model on the given dataset.
         """
-
+        output = _data_eliminate_batch(output)
+        target = _data_eliminate_batch(target)
         top5_acc = top_k_accuracy_score(output, target, k=5)
 
         return [top5_acc]
