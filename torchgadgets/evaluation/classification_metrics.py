@@ -26,7 +26,7 @@ def accuracy(output, target):
 ###--- Low-level APIs ---###
 ## Evaluation Metrics ##
 
-def eval_resolve(output, target, config: dict, evaluation_metrics=None):
+def eval_resolve(output, target, config: dict, metrics=None):
     eval_metrics = {}
 
     evaluation_metrics = EvaluationMetrics()
@@ -36,10 +36,10 @@ def eval_resolve(output, target, config: dict, evaluation_metrics=None):
     if type(target)==list:
         target = torch.stack(target, dim=0)
     
-    if evaluation_metrics is None:
-        evaluation_metrics = config['evaluation']['metrics']
+    if metrics is None:
+        metrics = config['evaluation']['metrics']
 
-    for eval_metric in evaluation_metrics:
+    for eval_metric in metrics:
             func_name = '_evaluation_' + eval_metric
             try:
                 eval_metrics[eval_metric] = getattr(evaluation_metrics, func_name)(output, target, config)
