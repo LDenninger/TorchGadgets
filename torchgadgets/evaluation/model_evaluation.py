@@ -7,6 +7,7 @@ def run_evaluation( model: torch.nn.Module,
                     data_augmentor,
                     dataset: torch.utils.data.DataLoader, 
                     config: dict,
+                    evaluation_metrics = None,
                     criterion = None,
                     suppress_output: bool = False):
     """
@@ -53,7 +54,7 @@ def run_evaluation( model: torch.nn.Module,
                 loss = criterion(output, labels)
                 losses.append(loss.cpu().item())
 
-        eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config)
+        eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config, evaluation_metrics=evaluation_metrics)
 
     if criterion is None:
         return eval_metrics
