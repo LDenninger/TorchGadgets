@@ -5,14 +5,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='torchgadgets',
-    version='0.0.0',
+    version='0.0.1',
     author='Luis Denninger',
     author_email='Luis0512@web.de',
-    description='Initial State',
+    description='A package that provides helpful functions when working with PyTorch models.',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='',
     license='MIT',
     packages=setuptools.find_packages(),
-    install_requires=['numpy', 'torch', 'torchvision', 'matplotlib', 'ipdb', 'tqdm', 'tensorboard', 'fvcore'],
+    install_requires=['numpy', 'torch', 'torchvision', 'matplotlib', 'ipdb', 'tqdm', 'tensorboard', 'fvcore', 'pandas', 'scikit-learn'],
 )

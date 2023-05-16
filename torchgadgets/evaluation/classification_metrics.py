@@ -1,5 +1,10 @@
 import torch
 
+import numpy as np
+from sklearn.metrics import confusion_matrix, top_k_accuracy_score
+
+import pandas as pd
+
 def _data_to_1d_pred_tensor(data):
     assert type(data) == list or torch.is_tensor(data), f'Data of type {type(data)} is not supported'
     def _recursive_list(d):
@@ -64,6 +69,39 @@ class EvaluationMetrics:
         correct = (predicted == target).sum().item()
 
         return [correct / total]
+    
+    def _evaluation_accuracy_top3(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
+        """
+            Computes the top-3 accuracy of the the predictions given the target.
+
+            Arguments:
+                output (torch.Tensor): The output of the model.
+                target (torch.Tensor): The target of the model.
+
+            Returns:
+                float: The accuracy of the given model on the given dataset.
+        """
+
+        top3_acc = top_k_accuracy_score(output, target, k=3)
+
+        return [top3_acc]
+    
+    def _evaluation_accuracy_top5(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
+        """
+            Computes the top-5 accuracy of the the predictions given the target.
+
+            Arguments:
+                output (torch.Tensor): The output of the model.
+                target (torch.Tensor): The target of the model.
+
+            Returns:
+                float: The accuracy of the given model on the given dataset.
+        """
+
+        top5_acc = top_k_accuracy_score(output, target, k=5)
+
+        return [top5_acc]
+
 
     def _evaluation_precision(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
         """
@@ -185,6 +223,27 @@ class EvaluationMetrics:
             class_recall.append(tp / (tp + fn))
 
         return class_recall
+    
+    def _evaluation_f1(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
+        """
+            Computes the F1 score of the the predictions given the target.
+
+            Arguments:
+                output (torch.Tensor): The output of the model.
+                target (torch.Tensor): The target of the model.
+
+            Returns:
+                float: The F1 score of the given model on the given dataset.
+        """
+        assert 'classes' in config['evaluation']
+        
+        # Discrete set of classes for the classification task
+        precision = self._evaluation_precision(output, target, config)[0]
+        recall = self._evaluation_recall(output, target, config)[0]
+
+        f1 = 2 * precision * recall / (precision + recall)
+
+        return [f1]
 
     def _evaluation_confusion_matrix(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
         # Build confusion matrix
