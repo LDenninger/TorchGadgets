@@ -38,8 +38,7 @@ class NeuralNetwork(nn.Module):
                 layers.append(nn.Linear(in_features=layer['in_features'], out_features=layer['out_features']))
             elif layer['type'] == 'dropout':
                 layers.append(nn.Dropout(layer['prob']))
-            elif layer['type'] == 'flatten':
-                layers.append(nn.Flatten())
+            
             
             ##-- CNN Layers --##
             elif layer["type"] == "conv2d":
@@ -89,6 +88,18 @@ class NeuralNetwork(nn.Module):
 
             elif layer['type'] =='batchnorm2d':
                 layers.append(nn.BatchNorm2d(layer['num_features'], layer['eps'], layer['momentum']))
+
+            ##-- Input Manipulation --##
+            elif layer['type'] == 'flatten':
+                layers.append(nn.Flatten(start_dim=layer['start_dim'], end_dim=layer['end_dim']))
+            elif layer['type'] == 'unsqueeze':
+                layers.append(nn.Unsqueeze(dim=layer['dim']))
+            elif layer['type'] =='squeeze':
+                layers.append(nn.Squeeze(dim=layer['dim']))
+            elif layer['type'] =='permute':
+                layers.append(nn.Permute(*layer['dim']))
+            elif layer['type'] =='reshape':
+                layers.append(nn.Reshape(*layer['shape']))
 
             ##-- Activation Functions --##
             elif layer["type"] == "relu":
