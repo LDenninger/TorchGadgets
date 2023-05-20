@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from .feature_extractor import *
+from .util_modules import *
 
 class NeuralNetwork(nn.Module):
     
@@ -97,13 +98,13 @@ class NeuralNetwork(nn.Module):
             elif layer['type'] == 'flatten':
                 layers.append(nn.Flatten(start_dim=layer['start_dim'], end_dim=layer['end_dim']))
             elif layer['type'] == 'unsqueeze':
-                layers.append(nn.Unsqueeze(dim=layer['dim']))
+                layers.append(Unsqueeze(dim=layer['dim']))
             elif layer['type'] =='squeeze':
-                layers.append(nn.Squeeze(dim=layer['dim']))
+                layers.append(Squeeze(dim=layer['dim']))
             elif layer['type'] =='permute':
-                layers.append(nn.Permute(*layer['dim']))
+                layers.append(Permute(*layer['dim']))
             elif layer['type'] =='reshape':
-                layers.append(nn.Reshape(*layer['shape']))
+                layers.append(Reshape(*layer['shape']))
 
             ##-- Activation Functions --##
             elif layer["type"] == "relu":
