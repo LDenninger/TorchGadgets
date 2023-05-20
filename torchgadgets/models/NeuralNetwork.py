@@ -57,12 +57,13 @@ class NeuralNetwork(nn.Module):
                                                 bidirectional=layer['bidirectional'],
                                                     nonlinearity=layer['activation'], 
                                                         num_layers=layer["num_layers"], 
-                                                            batch_first=True))
+                                                            batch_first=layer['batch_first']))
             elif layer["type"] == "LSTM":
                 layers.append(nn.LSTM(input_size=layer["input_size"], 
                                         hidden_size=layer["hidden_size"], 
                                             dropout=layer['dropout'],
-                                                bidirectional=layer['bidirectional']))
+                                                bidirectional=layer['bidirectional'],
+                                                    batch_first=layer['batch_first']))
             elif layer["type"] == "GRU":
                 layers.append(nn.GRU(input_size=layer["input_size"], 
                                         hidden_size=layer["hidden_size"], 
@@ -72,15 +73,18 @@ class NeuralNetwork(nn.Module):
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
                 layers.append(nn.RNNCell(input_size=layer["input_size"], 
-                                        hidden_size=layer["hidden_size"], 
-                                            dropout=layer['dropout'],
-                                                    nonlinearity=layer['activation']))
+                                            hidden_size=layer["hidden_size"], 
+                                                dropout=layer['dropout'],
+                                                        nonlinearity=layer['activation'],
+                                                            batch_first=layer['batch_first']))
             elif layer["type"] == "LSTMCell":
                 layers.append(nn.LSTMCell(input_size=layer["input_size"], 
-                                        hidden_size=layer["hidden_size"]))
+                                            hidden_size=layer["hidden_size"],
+                                                batch_first=layer['batch_first']))
             elif layer["type"] == "GRUCell":
                 layers.append(nn.GRUCell(input_size=layer["input_size"], 
-                                        hidden_size=layer["hidden_size"]))
+                                            hidden_size=layer["hidden_size"],
+                                                batch_first=layer['batch_first']))
             
             ##-- Normalization Layers --##
             elif layer['type'] =='batchnorm1d':
