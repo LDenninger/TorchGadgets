@@ -102,9 +102,9 @@ class NeuralNetwork(nn.Module):
             elif layer['type'] =='squeeze':
                 layers.append(Squeeze(dim=layer['dim']))
             elif layer['type'] =='permute':
-                layers.append(Permute(*layer['dim']))
+                layers.append(Permute(layer['dim']))
             elif layer['type'] =='reshape':
-                layers.append(Reshape(*layer['shape']))
+                layers.append(Reshape(layer['shape']))
 
             ##-- Activation Functions --##
             elif layer["type"] == "relu":
