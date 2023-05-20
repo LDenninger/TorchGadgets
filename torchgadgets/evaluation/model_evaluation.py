@@ -22,6 +22,7 @@ def run_evaluation( model: torch.nn.Module,
     """
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    num_iterations = config['num_eval_iterations'] if config['num_eval_iterations'] != -1 else len(dataset)
     
     # Setup model for evaluation
     model.eval()
@@ -32,26 +33,26 @@ def run_evaluation( model: torch.nn.Module,
         if suppress_output:
             progress_bar = enumerate(dataset)
         else:
-            progress_bar = tqdm(enumerate(dataset), total=len(dataset))
+            progress_bar = tqdm(enumerate(dataset), total=num_iterations)
             progress_bar.set_description(f'Evaluation:')
         outputs = []
         targets = []
         losses = []
         for i, (imgs, labels) in progress_bar:
+            if i==num_iterations:
+                break
             
-            labels_raw = torch.clone(labels)
             imgs, labels = imgs.to(device), labels.to(device)
 
             # apply preprocessing surch as flattening the imgs and create a one hot encodinh of the labels
             imgs, labels = data_augmentor((imgs, labels), train=False)
 
-
             output = model(imgs)
 
             outputs.append(output.cpu())
-            targets.append(labels_raw.cpu())
+            targets.append(labels.cpu())
             if criterion is not None:
-                loss = criterion(output, labels)
+                loss = criterion(output, labels.float())
                 losses.append(loss.cpu().item())
 
         eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)

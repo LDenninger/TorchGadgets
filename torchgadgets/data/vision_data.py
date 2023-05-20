@@ -88,32 +88,9 @@ class ImageDataAugmentor:
         """
         return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
     
-    ## Processing Functions ##    
-    def _flatten_img(self, input: tuple):
-        # Flatten only the image size dimensions
-        if self.flatten_only_img_size:
-            return torch.flatten(input, start_dim=-2)
-    
-        # Flatten all dimensions except of the batch dimension
-        else:
-            return torch.flatten(input, start_dim=1)
+    ###--- Processing Functions ---###    
 
-    def _rgb2grayscale(self, input: tuple):
-        return (self.gray_converter(input[0]), input[1])
-    
-    def _normalize(self, input: tuple):
-        if input[0].shape[1] == 1 or input[0].shape[-1] == 1:
-            return (self.normalizer_gray(input[0]), input[1])
-        return (self.normalizer_rgb(input[0]), input[1])
-    
-    def _permute(self, input: tuple):
-        if len(input[0].shape) == 4 and len(self.permute_dim.shape)==3:
-            p_dim = (0, self.permute_dim[0], self.permute_dim[1], self.permute_dim[2])
-            return (input[0].permute(p_dim), input[1])
-        return (input[0].permute(self.permute_dim), input[1])
-    
-    def _resize(self, input: tuple):
-        return (self.resizer(input[0]), input[1])
+    ##-- Data Augmentation --##
     
     def _random_rotation(self, input: tuple):
         return (self.random_rotater(input[0]), input[1])
@@ -135,7 +112,10 @@ class ImageDataAugmentor:
     
     def _random_crop(self, input: tuple):
         return (self.random_cropper(input[0]), input[1])
-
+    
+    def _random_resized_crop(self, input: tuple):
+        return (self.random_resized_cropper(input[0]), input[1])
+    
     def _dynamic_random_crop(self, input: tuple):
         """
             Performs a random crop on a single image with a dynamic crop size. 
@@ -155,9 +135,7 @@ class ImageDataAugmentor:
                 crop_size = (W, W)
         return (tv.transforms.RandomCrop(crop_size)(input[0]), input[1])
     
-    def _random_resized_crop(self, input: tuple):
-        return (self.random_resized_cropper(input[0]), input[1])
-    
+
     def _center_crop(self, input: tuple):
         return (self.center_cropper(input[0]), input[1])
     
@@ -174,6 +152,8 @@ class ImageDataAugmentor:
         crop_size = min([H, W])
         crop_size = (crop_size, crop_size)
         return (tv.transforms.CenterCrop(crop_size)(input[0]), input[1])
+    
+    ##-- Image Manipulation --##
 
     def _adjust_brightness(self, input: tuple):
         return (tv.transforms.functional.adjust_brightness(input[0], self.brightness_factor), input[1])
@@ -204,8 +184,54 @@ class ImageDataAugmentor:
     def _toTensor(self, input: tuple):
         return (self.tensorTransformer(input[0]), input[1])
     
-    def _blank(self, input: tuple):
-        return input
+    def _rgb2grayscale(self, input: tuple):
+        return (self.gray_converter(input[0]), input[1])
+    
+    def _normalize(self, input: tuple):
+        if input[0].shape[1] == 1 or input[0].shape[-1] == 1:
+            return (self.normalizer_gray(input[0]), input[1])
+        return (self.normalizer_rgb(input[0]), input[1])
+        
+    def _permute(self, input: tuple):
+        if len(input[0].shape) == 4 and len(self.permute_dim.shape)==3:
+            p_dim = (0, self.permute_dim[0], self.permute_dim[1], self.permute_dim[2])
+            return (input[0].permute(p_dim), input[1])
+        return (input[0].permute(self.permute_dim), input[1])
+    
+    def _resize(self, input: tuple):
+        if len(input[0].shape) > 4:
+            shape = input[0].shape[:-3]
+            image = torch.flatten(input[0], start_dim=0, end_dim=-4)
+            image = self.resizer(image)
+            image = image.view(shape + image.shape[-3:])
+            return (image, input[1])
+        else:
+            return (self.resizer(input[0]), input[1])
+        
+    def _flatten_img(self, input: tuple):
+        # Flatten only the image size dimensions
+        if self.flatten_only_img_size:
+            return torch.flatten(input, start_dim=-2)
+    
+        # Flatten all dimensions except of the batch dimension
+        else:
+            return torch.flatten(input, start_dim=1)
+
+
+    
+    ##-- Operation on the Labels --##
+    
+    def _one_hot_encoding(self, input: tuple):
+        return(input[0], torch.nn.functional.one_hot(input[1].to(torch.int64), num_classes = self.num_classes))
+    
+    def _repeat_labels(self, input: tuple):
+        return (input[0], torch.repeat_interleave(input[1].unsqueeze(self.l_unsqueeze_dim), repeats=self.l_unsqueeze_num, dim=self.l_unsqueeze_dim))
+    
+    def _flatten_labels(self, input: tuple):
+        return (input[0], torch.flatten(input[1], start_dim=self.l_flatten_s_dim, end_dim=self.l_flatten_e_dim))
+    
+
+    ##-- Advanced Data Augmentation --##
     
     def _mixup(self, input: tuple):
         """
@@ -259,7 +285,14 @@ class ImageDataAugmentor:
         lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (input[0].shape[-1] * input[0].shape[-2]))
         target = torch.nn.functional.one_hot(input[1], num_classes=self.cutmix_classes) * lam + (1 - lam) * torch.nn.functional.one_hot(target_pairs, num_classes=self.cutmix_classes)
         return (batch_pairs, target)
-  
+    
+    ##-- Blank Processing Step --##
+
+    def _blank(self, input: tuple):
+        return input
+
+    ##-- Pipeline Initialization --##
+
     def _init_pipeline(self):
         train_augmentation = []
         eval_augmentation = []
@@ -424,6 +457,27 @@ class ImageDataAugmentor:
                     train_augmentation.append(self._toTensor)
                 if process_step['eval']:
                     eval_augmentation.append(self._toTensor)
+            elif process_step['type'] == 'one_hot_encoding':
+                self.num_classes = process_step['num_classes']
+                if process_step['train']:
+                    train_augmentation.append(self._one_hot_encoding)
+                if process_step['eval']:
+                    eval_augmentation.append(self._one_hot_encoding)
+            elif process_step['type'] == 'label_flatten':
+                self.l_flatten_s_dim = process_step['start_dim']
+                self.l_flatten_e_dim = process_step['end_dim']
+                if process_step['train']:
+                    train_augmentation.append(self._flatten_labels)
+                if process_step['eval']:
+                    eval_augmentation.append(self._flatten_labels)
+            elif process_step['type']== 'label_repeat':
+                self.l_unsqueeze_dim = process_step['dim']
+                self.l_unsqueeze_num = process_step['num']
+                if process_step['train']:
+                    train_augmentation.append(self._repeat_labels)
+                if process_step['eval']:
+                    eval_augmentation.append(self._repeat_labels)
+
         if len(train_augmentation) == 0:
             train_augmentation.append(self._blank)
         if len(eval_augmentation) == 0:

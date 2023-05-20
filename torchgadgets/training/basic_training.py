@@ -42,7 +42,6 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
         ###--- Training Epoch ---###
         progress_bar = tqdm(enumerate(train_loader), total=config['num_iterations'])
         for i, (img, label) in progress_bar:
-            
             img = img.to(DEVICE)
             label = label.to(DEVICE)
             # Apply data augmentation and pre-processing
@@ -52,7 +51,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
             # Compute output of the model
             output = model(img)
             # Compute loss
-            loss = criterion(output, label)
+            loss = criterion(output.float(), label.float())
             # Backward pass to compute the gradients wrt to the loss
             loss.backward()
             # Update weights

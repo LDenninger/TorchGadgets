@@ -59,12 +59,14 @@ class NeuralNetwork(nn.Module):
                                                     nonlinearity=layer['activation'], 
                                                         num_layers=layer["num_layers"], 
                                                             batch_first=layer['batch_first']))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size']))
             elif layer["type"] == "LSTM":
                 layers.append(nn.LSTM(input_size=layer["input_size"], 
                                         hidden_size=layer["hidden_size"], 
                                             dropout=layer['dropout'],
                                                 bidirectional=layer['bidirectional'],
                                                     batch_first=layer['batch_first']))
+
             elif layer["type"] == "GRU":
                 layers.append(nn.GRU(input_size=layer["input_size"], 
                                         hidden_size=layer["hidden_size"], 

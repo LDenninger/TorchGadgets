@@ -30,3 +30,13 @@ class Unsqueeze(nn.Module):
         self.dim = dim
     def forward(self, x):
         return torch.unsqueeze(x, self.dim)
+    
+class ProcessRecurrentOutput(nn.Module):
+    def __init__(self, output_id, hidden_dim):
+        super(ProcessRecurrentOutput, self).__init__()
+        self.output_id = output_id
+        self.hidden_dim = hidden_dim
+    def forward(self, x):
+        x = x[self.output_id]
+        x = x.contiguous().view(-1, self.hidden_dim)
+        return x
