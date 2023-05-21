@@ -80,6 +80,7 @@ class NeuralNetwork(nn.Module):
                                             hidden_size=layer["hidden_size"], 
                                                 num_layers=layer["num_layers"],
                                                     kernel_size=layer["kernel_size"]))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size']))
             
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":

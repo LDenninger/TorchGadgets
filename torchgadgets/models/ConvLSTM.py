@@ -64,13 +64,11 @@ class ConvLSTM(nn.Module):
     
     """
 
-    def __init__(self,  num_layers: int,
+    def __init__(self,  layers: list,
                             input_dims: tuple[int, int, int], 
-                                hidden_size: int,
-                                    kernel_size: tuple[int, int],
-                                        stride: int = 1,
-                                            bias: bool = True,
-                                                batch_first: bool = False) -> None:
+                                stride: int = 1,
+                                    bias: bool = True,
+                                        batch_first: bool = False) -> None:
         super(ConvLSTM, self).__init__()
 
         self.in_channels = input_dims[0]
@@ -83,8 +81,8 @@ class ConvLSTM(nn.Module):
 
         layers = []
 
-        for id in range(num_layers):
-            layers.append(ConvLSTMCell(self.in_channels, self.hidden_size, self.kernel_size, self.stride, self.bias))
+        for layer in layers:
+            layers.append(ConvLSTMCell(self.input_size, layer['hidden_dim'], layer['kernel_size'], layer['kernel_size'], self.bias))
         
         self.model = nn.MOduleList(layers)
 
