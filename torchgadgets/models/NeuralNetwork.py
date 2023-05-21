@@ -62,16 +62,24 @@ class NeuralNetwork(nn.Module):
                 layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size']))
             elif layer["type"] == "LSTM":
                 layers.append(nn.LSTM(input_size=layer["input_size"], 
-                                        hidden_size=layer["hidden_size"], 
-                                            dropout=layer['dropout'],
-                                                bidirectional=layer['bidirectional'],
-                                                    batch_first=layer['batch_first']))
+                                        hidden_size=layer["hidden_size"],
+                                            num_layers=layer["num_layers"],
+                                                dropout=layer['dropout'],
+                                                    bidirectional=layer['bidirectional'],
+                                                        batch_first=layer['batch_first']))
 
             elif layer["type"] == "GRU":
                 layers.append(nn.GRU(input_size=layer["input_size"], 
                                         hidden_size=layer["hidden_size"], 
-                                            dropout=layer['dropout'],
-                                                bidirectional=layer['bidirectional']))
+                                            num_layers=layer["num_layers"],
+                                                dropout=layer['dropout'],
+                                                    bidirectional=layer['bidirectional']))
+                
+            elif layer["type"] == "ConvLSTM":
+                layers.append(nn.ConvLSTM(input_size=layer["input_size"], 
+                                            hidden_size=layer["hidden_size"], 
+                                                num_layers=layer["num_layers"],
+                                                    kernel_size=layer["kernel_size"]))
             
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
@@ -88,6 +96,11 @@ class NeuralNetwork(nn.Module):
                 layers.append(nn.GRUCell(input_size=layer["input_size"], 
                                             hidden_size=layer["hidden_size"],
                                                 batch_first=layer['batch_first']))
+                
+            elif layer["type"] == "ConvLSTMCell":
+                layers.append(nn.ConvLSTMCell(input_size=layer["input_size"], 
+                                                hidden_size=layer["hidden_size"], 
+                                                    kernel_size=layer["kernel_size"]))
             
             ##-- Normalization Layers --##
             elif layer['type'] =='batchnorm1d':

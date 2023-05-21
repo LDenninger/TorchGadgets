@@ -19,15 +19,15 @@ class ConvLSTMCell(nn.Module):
             h_t = o_t * tanh(c_t)
     """
 
-    def __init__(self,  input_dims: tuple[int, int, int], 
+    def __init__(self,  input_size: tuple[int, int, int], 
                             hidden_size: int,
                                 kernel_size: tuple[int, int],
                                     stride: int = 1,
                                         bias: bool = True) -> None:
         super(ConvLSTMCell, self).__init__()
 
-        self.in_channels = input_dims[0]
-        self.input_size = (input_dims[1], input_dims[2])
+        self.in_channels = input_size[0]
+        self.input_size = (input_size[1], input_size[2])
         self.kernel_size = kernel_size
         self.hidden_size = hidden_size
         self.stride = stride
@@ -69,7 +69,8 @@ class ConvLSTM(nn.Module):
                                 hidden_size: int,
                                     kernel_size: tuple[int, int],
                                         stride: int = 1,
-                                            bias: bool = True) -> None:
+                                            bias: bool = True,
+                                                batch_first: bool = False) -> None:
         super(ConvLSTM, self).__init__()
 
         self.in_channels = input_dims[0]
@@ -78,6 +79,7 @@ class ConvLSTM(nn.Module):
         self.hidden_size = hidden_size
         self.stride = stride
         self.bias = bias
+        self.batch_first = batch_first
 
         layers = []
 
@@ -89,7 +91,8 @@ class ConvLSTM(nn.Module):
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
 
         # Required input shape: (seq_len, batch_size, in_channels, height, width)
-        input = input.permute(1, 0, 2, 3)
+        if self.batch_first:
+            input = input.permute(1, 0, 2, 3)
 
         # If no initial hidden state is provided, initialize it with zeros
         if hidden_state is None:
