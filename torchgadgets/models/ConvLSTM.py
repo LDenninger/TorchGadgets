@@ -23,7 +23,8 @@ class ConvLSTMCell(nn.Module):
                             hidden_size: int,
                                 kernel_size: tuple[int, int],
                                     stride: int = 1,
-                                        bias: bool = True) -> None:
+                                        bias: bool = True,
+                                            batchnorm: bool = False) -> None:
         super(ConvLSTMCell, self).__init__()
 
         self.in_channels = input_size[0]
@@ -32,10 +33,18 @@ class ConvLSTMCell(nn.Module):
         self.hidden_size = hidden_size
         self.stride = stride
         self.bias = bias
+        self.batchnorm = batchnorm
 
         self.padding = int((self.kernel_size[0] - 1) // 2)
 
         self.Conv = nn.Conv2d(self.in_channels+ self.hidden_size, 4*self.hidden_size, kernel_size=self.kernel_size, stride=self.stride, bias=self.bias)
+
+        if self.batchnorm:
+            self.conv_bn = nn.BatchNorm2d(4*self.hidden_size)
+            self.out_bn = nn.BatchNorm1d(self.hidden_size)
+
+
+
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
@@ -44,12 +53,17 @@ class ConvLSTMCell(nn.Module):
         input_concat = torch.cat((input, hidden), dim=1)
 
         A_t = self.Conv(input_concat)
+        if self.batchnorm:
+            A_t = self.conv_bn(A_t)
         i_t = torch.sigmoid(A_t[:,0:self.hidden_size])
         f_t = torch.sigmoid(A_t[:,self.hidden_size:2*self.hidden_size])
         o_t = torch.sigmoid(A_t[:,2*self.hidden_size:3*self.hidden_size])
         g_t = torch.tanh(A_t[:,3*self.hidden_size:4*self.hidden_size])
         c_t = f_t * c_t + i_t * g_t
-        h_t = o_t * torch.tanh(c_t)
+        if self.batchnorm:
+            h_t = o_t * torch.tanh(self.out_bn(c_t))
+        else:
+            h_t = o_t * torch.tanh(c_t)
 
         return h_t, c_t
 
@@ -77,12 +91,17 @@ class ConvLSTM(nn.Module):
         self.bias = bias
         self.batch_first = batch_first
 
-        layers = []
+        cells = []
 
         for layer in layers:
-            layers.append(ConvLSTMCell(self.input_size, layer['hidden_dim'], layer['kernel_size'], layer['kernel_size'], self.bias))
+            cells.append(ConvLSTMCell( input_size=self.input_size, 
+                                            hidden_size=layer['hidden_dim'],
+                                                kernel_size=layer['kernel_size'], 
+                                                    stride=layer['stride'],
+                                                         batchnorm=layer['batchnorm'],
+                                                            bias=self.bias))
         
-        self.model = nn.MOduleList(layers)
+        self.model = nn.MOduleList(cells)
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
 
