@@ -73,8 +73,6 @@ class ConvLSTM(nn.Module):
 
         self.in_channels = input_dims[0]
         self.input_size = (input_dims[1], input_dims[2])
-        self.kernel_size = kernel_size
-        self.hidden_size = hidden_size
         self.stride = stride
         self.bias = bias
         self.batch_first = batch_first
