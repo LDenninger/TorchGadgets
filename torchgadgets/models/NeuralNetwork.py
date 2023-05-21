@@ -77,10 +77,9 @@ class NeuralNetwork(nn.Module):
                                                     bidirectional=layer['bidirectional']))
                 
             elif layer["type"] == "ConvLSTM":
-                layers.append(ConvLSTM(input_size=layer["input_size"], 
-                                            hidden_size=layer["hidden_size"], 
-                                                num_layers=layer["num_layers"],
-                                                    kernel_size=layer["kernel_size"]))
+                layers.append(ConvLSTM( layers = layer['layers'],
+                                            input_dims=layer["input_size"], 
+                                                batch_first = layer['batch_first']))
                 layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size']))
             
             ##-- Recurrent Cells --##
@@ -102,7 +101,9 @@ class NeuralNetwork(nn.Module):
             elif layer["type"] == "ConvLSTMCell":
                 layers.append(ConvLSTMCell(input_size=layer["input_size"], 
                                                 hidden_size=layer["hidden_size"], 
-                                                    kernel_size=layer["kernel_size"]))
+                                                    kernel_size=layer["kernel_size"],
+                                                        stride=layer["stride"],
+                                                            batchnorm=layer['batchnorm']))
             
             ##-- Normalization Layers --##
             elif layer['type'] =='batchnorm1d':

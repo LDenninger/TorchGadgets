@@ -80,7 +80,6 @@ class ConvLSTM(nn.Module):
 
     def __init__(self,  layers: list,
                             input_dims: tuple[int, int, int], 
-                                stride: int = 1,
                                     bias: bool = True,
                                         batch_first: bool = False) -> None:
         super(ConvLSTM, self).__init__()
