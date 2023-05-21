@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 from .classification_metrics import evaluate
 
-@torch.nograd()
+@torch.no_grad()
 def run_evaluation( model: torch.nn.Module, 
                     data_augmentor,
                     dataset: torch.utils.data.DataLoader, 
