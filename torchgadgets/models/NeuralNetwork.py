@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from .feature_extractor import *
+from .ConvLSTM import *
 from .util_modules import *
 
 class NeuralNetwork(nn.Module):
@@ -76,7 +77,7 @@ class NeuralNetwork(nn.Module):
                                                     bidirectional=layer['bidirectional']))
                 
             elif layer["type"] == "ConvLSTM":
-                layers.append(nn.ConvLSTM(input_size=layer["input_size"], 
+                layers.append(ConvLSTM(input_size=layer["input_size"], 
                                             hidden_size=layer["hidden_size"], 
                                                 num_layers=layer["num_layers"],
                                                     kernel_size=layer["kernel_size"]))
@@ -99,7 +100,7 @@ class NeuralNetwork(nn.Module):
                                                 batch_first=layer['batch_first']))
                 
             elif layer["type"] == "ConvLSTMCell":
-                layers.append(nn.ConvLSTMCell(input_size=layer["input_size"], 
+                layers.append(ConvLSTMCell(input_size=layer["input_size"], 
                                                 hidden_size=layer["hidden_size"], 
                                                     kernel_size=layer["kernel_size"]))
             
