@@ -93,7 +93,7 @@ class ConvLSTM(nn.Module):
 
         for layer in layers:
             cells.append(ConvLSTMCell( input_size=self.input_size, 
-                                            hidden_size=layer['hidden_dim'],
+                                            hidden_size=layer['hidden_size'],
                                                 kernel_size=layer['kernel_size'], 
                                                     stride=layer['stride'],
                                                          batchnorm=layer['batchnorm'],
