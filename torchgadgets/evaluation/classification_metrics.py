@@ -36,7 +36,7 @@ def accuracy(output, target):
 ###--- Low-level APIs ---###
 ## Evaluation Metrics ##
 
-def eval_resolve(output, target, config: dict, metrics=None):
+def evaluate(output, target, config: dict, metrics=None):
     eval_metrics = {}
 
     evaluation_metrics = EvaluationMetrics()
@@ -49,11 +49,11 @@ def eval_resolve(output, target, config: dict, metrics=None):
     if metrics is None:
         metrics = config['evaluation']['metrics']
     for eval_metric in metrics:
-            func_name = '_evaluation_' + eval_metric
-            try:
-                eval_metrics[eval_metric] = getattr(evaluation_metrics, func_name)(output, target, config)
-            except:
-                print(f"NotImplemented: Evaluation metric {eval_metric}")
+        func_name = '_evaluation_' + eval_metric
+        try:
+            eval_metrics[eval_metric] = getattr(evaluation_metrics, func_name)(output, target, config)
+        except:
+            print(f"NotImplemented: Evaluation metric {eval_metric}")
         
     return eval_metrics
 
@@ -70,12 +70,20 @@ class EvaluationMetrics:
             Returns:
                 float: The accuracy of the given model on the given dataset.
         """
-
+        import ipdb; ipdb.set_trace()
         _, predicted = torch.max(output, -1)
 
-        if len(predicted.shape)==2 and len(target.shape)==2:
+        if len(predicted.shape)==2:
             predicted = torch.flatten(predicted)
-            target = torch.flatten(target)
+
+        if len(target.shape)>2:
+            target = torch.flatten(target, start_dim=0, end_dim=-2)
+
+        if len(target.shape)==2:
+            if all(torch.flatten(target).shape==predicted.shape):
+                target = torch.flatten(target)
+            else:
+                target = torch.argmax(target, dim=-1)
 
         total = target.shape[0]
         correct = (predicted == target).sum().item()

@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 
-from .classification_metrics import eval_resolve
+from .classification_metrics import evaluate
 
 def run_evaluation( model: torch.nn.Module, 
                     data_augmentor,
@@ -55,7 +55,7 @@ def run_evaluation( model: torch.nn.Module,
                 loss = criterion(output, labels.float())
                 losses.append(loss.cpu().item())
 
-        eval_metrics = eval_resolve(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)
+        eval_metrics = evaluate(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)
 
     if criterion is None:
         return eval_metrics
