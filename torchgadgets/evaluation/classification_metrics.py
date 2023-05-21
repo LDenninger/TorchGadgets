@@ -70,7 +70,6 @@ class EvaluationMetrics:
             Returns:
                 float: The accuracy of the given model on the given dataset.
         """
-        import ipdb; ipdb.set_trace()
         _, predicted = torch.max(output, -1)
 
         if len(predicted.shape)==2:
@@ -80,7 +79,7 @@ class EvaluationMetrics:
             target = torch.flatten(target, start_dim=0, end_dim=-2)
 
         if len(target.shape)==2:
-            if all(torch.flatten(target).shape==predicted.shape):
+            if torch.flatten(target).shape==predicted.shape:
                 target = torch.flatten(target)
             else:
                 target = torch.argmax(target, dim=-1)
