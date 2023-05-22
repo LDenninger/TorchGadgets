@@ -27,6 +27,19 @@ class ConvLSTMCell(nn.Module):
                                             bias: bool = True,
                                                 batchnorm: bool = False,
                                                     device: str = 'cuda') -> None:
+        """
+            Initialize a ConvLSTM cell.
+
+            Parameters:
+                in_channels (int): Number of input channels
+                input_size tuple(int, int): Size of the input image (height, width)
+                hidden_size (int): Channels of the hidden state
+                kernel_size tuple(int, int): Kernel size used in the convolution
+                stride (int, optional): Stride of the convolutional kernel
+                bias (bool, optional): Whether to add a bias term to the convolution. Default: True
+                batchnorm (bool, optional): Whether to use batch normalization to the cell. Default: False
+                device (str, optional): Device to run the model. Default: 'cuda'
+        """
         super(ConvLSTMCell, self).__init__()
 
         self.in_channels = in_channels
@@ -48,29 +61,53 @@ class ConvLSTMCell(nn.Module):
 
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+            Forward function of the ConvLSTM cell. 
+            The function computes a LSTM cell in vectorized form given a 3D input.
+            
+            Arguments:
+                input: Input image, [batch_size, in_channels, height, width]
+                hidden_state: Hidden state of form (h_t, c_t), 
+                 -> Shape: ([batch_size, hidden_size, height, width], [batch_size, hidden_size, height, width])
+                 -> Hidden state must be provided. If this is the first call in a sequence,
+                    one can usethe init_hidden() function priorly to initialize the hidden state
+            
+            Output: Hidden State (h_t, c_t)
+        """
+        
         hidden, c_t = hidden_state
 
+        # Concatenate the input and the hidden state in the channel dimension
         input_concat = torch.cat((input, hidden), dim=1)
-        try:
-            A_t = self.Conv(input_concat)
-            if self.batchnorm:
-                A_t = self.conv_bn(A_t)
-            i_t = torch.sigmoid(A_t[:,0:self.hidden_size])
-            f_t = torch.sigmoid(A_t[:,self.hidden_size:2*self.hidden_size])
-            o_t = torch.sigmoid(A_t[:,2*self.hidden_size:3*self.hidden_size])
-            g_t = torch.tanh(A_t[:,3*self.hidden_size:4*self.hidden_size])
-            c_t = f_t * c_t + i_t * g_t
-            if self.batchnorm:
-                h_t = o_t * torch.tanh(self.out_bn(c_t))
-            else:
-                h_t = o_t * torch.tanh(c_t)
-        except Exception as e:
-            print(str(e))
-            import ipdb; ipdb.set_trace()
+        # Concatenated Gate Matrix
+        A_t = self.Conv(input_concat)
+        # Introduce batch normalization at the input
+        if self.batchnorm:
+            A_t = self.conv_bn(A_t)
+        # Simply apply formulas to the vectorized version
+        i_t = torch.sigmoid(A_t[:,0:self.hidden_size])
+        f_t = torch.sigmoid(A_t[:,self.hidden_size:2*self.hidden_size])
+        o_t = torch.sigmoid(A_t[:,2*self.hidden_size:3*self.hidden_size])
+        g_t = torch.tanh(A_t[:,3*self.hidden_size:4*self.hidden_size])
+        c_t = f_t * c_t + i_t * g_t
+        # Apply batch normalization before applying the activation
+        if self.batchnorm:
+            h_t = o_t * torch.tanh(self.out_bn(c_t))
+        else:
+            h_t = o_t * torch.tanh(c_t)
+
 
         return h_t, c_t
 
     def init_hidden(self,batch_size):
+        """
+            Initialize the hidden state of the ConvLSTM cell with Zeros.
+
+            Output: Zeros of shape: 
+                ([batch_size, hidden_size, height, width], [batch_size, hidden_size, height, width])
+            
+        
+        """
         return (torch.zeros(batch_size,self.hidden_size,self.input_size[0],self.input_size[1]).to(self.device),torch.zeros(batch_size,self.hidden_size,self.input_size[0],self.input_size[1]).to(self.device))
 
     
@@ -111,9 +148,9 @@ class ConvLSTM(nn.Module):
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
         # Required input shape: (seq_len, batch_size, in_channels, height, width)
+        import ipdb; ipdb.set_trace()
         if self.batch_first:
             input = input.permute(1, 0, 2, 3, 4)
-        import ipdb; ipdb.set_trace
 
         # If no initial hidden state is provided, initialize it with zeros
         if hidden_state is None:
@@ -133,10 +170,12 @@ class ConvLSTM(nn.Module):
             for s_id in range(seq_len):
                 hidden_c = layer(input[s_id], hidden_c)
                 inner_output.append(hidden_c[0])
-
+            # Gather output from each layer for each sequence        
             hidden_output.append(hidden_c)
+
+            # Take the 
             input = torch.cat(inner_output, dim=0).view(input.shape[0], *inner_output[0].shape)
-        import ipdb; ipdb.set_trace()
+        # Output of last layer: [batch_size, hidden_size, height, width]
         output = hidden_c[0]
         return output, (hidden_output, input)
 

@@ -50,6 +50,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
             optimizer.zero_grad()
             # Compute output of the model
             output = model(img)
+            import ipdb; ipdb.set_trace()
             # Compute loss
             loss = criterion(output.float(), label.float())
             # Backward pass to compute the gradients wrt to the loss

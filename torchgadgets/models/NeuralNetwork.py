@@ -45,10 +45,17 @@ class NeuralNetwork(nn.Module):
             ##-- CNN Layers --##
             elif layer["type"] == "conv2d":
                 layers.append(nn.Conv2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
+            
+            #- Pooling -#
             elif layer["type"] == "maxpool2d":
                 layers.append(nn.MaxPool2d(layer["kernel_size"], layer['stride']))
             elif layer["type"] == "avgpool2d":
                 layers.append(nn.AvgPool2d(layer["kernel_size"], layer['stride']))
+            elif layer["type"] == "ada_maxpool2d":
+                layers.append(nn.AdaptiveMaxPool2d(layer["output_size"]))
+            elif layer["type"] == "ada_avgpool2d":
+                layers.append(nn.AdaptiveAvgPool2d(layer["output_size"]))
+
    
 
             ##-- Recurrent Models --##
@@ -80,7 +87,7 @@ class NeuralNetwork(nn.Module):
                 layers.append(ConvLSTM( layers = layer['layers'],
                                             input_dims=layer["input_size"], 
                                                 batch_first = layer['batch_first']))
-                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['layers'][-1]['hidden_size']))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], (layer['layers'][-1]['hidden_size'], layer['input_size'][1], layer['input_size'][2])))
             
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
@@ -118,7 +125,10 @@ class NeuralNetwork(nn.Module):
             elif layer['type'] == 'unsqueeze':
                 layers.append(Unsqueeze(dim=layer['dim']))
             elif layer['type'] =='squeeze':
-                layers.append(Squeeze(dim=layer['dim']))
+                if layer['dim'] == 'all':
+                    layers.append(Squeeze())
+                else:
+                    layers.append(Squeeze(dim=layer['dim']))
             elif layer['type'] =='permute':
                 layers.append(Permute(layer['dim']))
             elif layer['type'] =='reshape':
