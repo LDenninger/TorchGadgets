@@ -44,6 +44,8 @@ class ProcessRecurrentOutput(nn.Module):
         super(ProcessRecurrentOutput, self).__init__()
         self.output_id = output_id
         self.hidden_dim = hidden_dim
+        if not isinstance(self.hidden_dim, list):
+            self.hidden_dim = [self.hidden_dim]
     def forward(self, x):
         x = x[self.output_id]
         x = x.contiguous().view(-1, *self.hidden_dim)
