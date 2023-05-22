@@ -37,6 +37,7 @@ class ProcessRecurrentOutput(nn.Module):
         self.output_id = output_id
         self.hidden_dim = hidden_dim
     def forward(self, x):
+        import ipdb; ipdb.set_trace()
         x = x[self.output_id]
         x = x.contiguous().view(-1, self.hidden_dim)
         return x

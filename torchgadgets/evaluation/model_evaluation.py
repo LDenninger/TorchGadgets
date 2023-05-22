@@ -29,33 +29,33 @@ def run_evaluation( model: torch.nn.Module,
     model.eval()
     model.to(device)
     eval_metrics = {}
-    with torch.no_grad():
-        if suppress_output:
-            progress_bar = enumerate(dataset)
-        else:
-            progress_bar = tqdm(enumerate(dataset), total=num_iterations)
-            progress_bar.set_description(f'Evaluation:')
-        outputs = []
-        targets = []
-        losses = []
-        for i, (imgs, labels) in progress_bar:
-            if i==num_iterations:
-                break
-            
-            imgs, labels = imgs.to(device), labels.to(device)
+    if suppress_output:
+        progress_bar = enumerate(dataset)
+    else:
+        progress_bar = tqdm(enumerate(dataset), total=num_iterations)
+        progress_bar.set_description(f'Evaluation:')
+    outputs = []
+    targets = []
+    losses = []
+    import ipdb; ipdb.set_trace()
+    for i, (imgs, labels) in progress_bar:
+        if i==num_iterations:
+            break
+        
+        imgs, labels = imgs.to(device), labels.to(device)
 
-            # apply preprocessing surch as flattening the imgs and create a one hot encodinh of the labels
-            imgs, labels = data_augmentor((imgs, labels), train=False)
+        # apply preprocessing surch as flattening the imgs and create a one hot encodinh of the labels
+        imgs, labels = data_augmentor((imgs, labels), train=False)
 
-            output = model(imgs)
+        output = model(imgs)
 
-            outputs.append(output.cpu())
-            targets.append(labels.cpu())
-            if criterion is not None:
-                loss = criterion(output, labels.float())
-                losses.append(loss.cpu().item())
+        outputs.append(output.cpu())
+        targets.append(labels.cpu())
+        if criterion is not None:
+            loss = criterion(output, labels.float())
+            losses.append(loss.cpu().item())
 
-        eval_metrics = evaluate(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)
+    eval_metrics = evaluate(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)
 
     if criterion is None:
         return eval_metrics

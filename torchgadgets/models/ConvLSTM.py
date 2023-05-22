@@ -19,21 +19,24 @@ class ConvLSTMCell(nn.Module):
             h_t = o_t * tanh(c_t)
     """
 
-    def __init__(self,  input_size: tuple[int, int, int], 
-                            hidden_size: int,
-                                kernel_size: tuple[int, int],
-                                    stride: int = 1,
-                                        bias: bool = True,
-                                            batchnorm: bool = False) -> None:
+    def __init__(self,  in_channels: int,
+                            input_size: tuple[int, int], 
+                                hidden_size: int,
+                                    kernel_size: tuple[int, int],
+                                        stride: int = 1,
+                                            bias: bool = True,
+                                                batchnorm: bool = False,
+                                                    device: str = 'cuda') -> None:
         super(ConvLSTMCell, self).__init__()
 
-        self.in_channels = input_size[0]
-        self.input_size = (input_size[1], input_size[2])
+        self.in_channels = in_channels
+        self.input_size = input_size
         self.kernel_size = kernel_size
         self.hidden_size = hidden_size
         self.stride = stride
         self.bias = bias
         self.batchnorm = batchnorm
+        self.device = device
 
         self.padding = int((self.kernel_size[0] - 1) // 2)
 
@@ -42,8 +45,6 @@ class ConvLSTMCell(nn.Module):
         if self.batchnorm:
             self.conv_bn = nn.BatchNorm2d(4*self.hidden_size)
             self.out_bn = nn.BatchNorm1d(self.hidden_size)
-
-
 
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -70,7 +71,7 @@ class ConvLSTMCell(nn.Module):
         return h_t, c_t
 
     def init_hidden(self,batch_size):
-        return (torch.zeros(batch_size,self.hidden_size,self.input_size[0],self.input_size[1]),torch.zeros(batch_size,self.hidden_size,self.input_size[0],self.input_size[1]))
+        return (torch.zeros(batch_size,self.hidden_size,self.input_size[0],self.input_size[1]).to(self.device),torch.zeros(batch_size,self.hidden_size,self.input_size[0],self.input_size[1]).to(self.device))
 
     
 class ConvLSTM(nn.Module):
@@ -83,7 +84,8 @@ class ConvLSTM(nn.Module):
     def __init__(self,  layers: list,
                             input_dims: tuple[int, int, int], 
                                     bias: bool = True,
-                                        batch_first: bool = False) -> None:
+                                        batch_first: bool = False,
+                                            device: str = 'cuda') -> None:
         super(ConvLSTM, self).__init__()
 
         self.in_channels = input_dims[0]
@@ -91,16 +93,19 @@ class ConvLSTM(nn.Module):
         self.bias = bias
         self.batch_first = batch_first
         self.num_layers = len(layers)
+        self.device = device
 
         cells = []
 
-        for layer in layers:
-            cells.append(ConvLSTMCell( input_size=input_dims, 
-                                            hidden_size=layer['hidden_size'],
-                                                kernel_size=layer['kernel_size'], 
-                                                    stride=layer['stride'],
-                                                         batchnorm=layer['batchnorm'],
-                                                            bias=self.bias))
+        for i, layer in enumerate(layers):
+                cells.append(ConvLSTMCell( in_channels = self.in_channels if i==0 else layers[i-1]['hidden_size'],
+                                                input_size=self.input_size, 
+                                                    hidden_size=layer['hidden_size'],
+                                                        kernel_size=layer['kernel_size'], 
+                                                            stride=layer['stride'],
+                                                                batchnorm=layer['batchnorm'],
+                                                                    bias=self.bias,
+                                                                        device=self.device))
         
         self.model = nn.ModuleList(cells)
 
@@ -131,8 +136,9 @@ class ConvLSTM(nn.Module):
 
             hidden_output.append(hidden_c)
             input = torch.cat(inner_output, dim=0).view(input.shape[0], *inner_output[0].shape)
-
-        return hidden_output, input
+        import ipdb; ipdb.set_trace()
+        output = hidden_c[0]
+        return output, (hidden_output, input)
 
     def init_hidden(self,batch_size):
         init_states=[]#this is a list of tuples
