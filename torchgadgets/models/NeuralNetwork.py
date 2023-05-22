@@ -14,7 +14,8 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         self.backbone = None
 
-        self.build_model(layers)
+        modules = self.build_model(layers)
+        self.model = nn.Sequential(*modules)
 
     def build_model(self, layer_config):
         layers = nn.ModuleList()
@@ -90,6 +91,11 @@ class NeuralNetwork(nn.Module):
                                             input_dims=layer["input_size"], 
                                                 batch_first = layer['batch_first']))
                 layers.append(ProcessRecurrentOutput(layer['output_id'], (layer['layers'][-1]['hidden_size'], layer['input_size'][1], layer['input_size'][2]), None if layer['sequence_out']=='all' else layer['sequence_out'], layer['batch_first']))
+            
+            elif layer['type'] == "RecurrentNetwork":
+                layers.append(RecurrentCellWrapper( ))
+            
+            
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
                 layers.append(RecurrentCellWrapper( nn.RNNCell(input_size=layer["input_size"], 
@@ -138,6 +144,8 @@ class NeuralNetwork(nn.Module):
                 layers.append(Permute(layer['dim']))
             elif layer['type'] =='reshape':
                 layers.append(Reshape(layer['shape']))
+            elif layers['type'] == 'unflatten':
+                layers.append(nn.Unflatten())
 
             ##-- Activation Functions --##
             elif layer["type"] == "relu":
@@ -149,10 +157,7 @@ class NeuralNetwork(nn.Module):
             elif layer["type"] == "custom":
                 layers.append(layer['module'])
      
-
-
-            
-        self.model = nn.Sequential(*layers)
+        return layers
 
     
     def forward(self, x):

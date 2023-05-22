@@ -61,17 +61,15 @@ class ProcessRecurrentOutput(nn.Module):
     
 class RecurrentCellWrapper(nn.Module):
     """
-        A wrapper class for recurrent cells that implements sequence-wise computation
-        for each cell.
+        A wrapper class for recurrent cells that implements.
     """
 
-    def __init__(self, cell: nn.Module, return_seq_output=False, batch_first=False):
+    def __init__(self, cells: list[nn.Module], batch_first=False):
         super(RecurrentCellWrapper, self).__init__()
-        self.cell = cell
+        self.cells = cells
         self.batch_first = batch_first
-        self.return_seq_output = return_seq_output
 
-    def forward(self, x, hx=None):
+    def forward(self, x, hidden=None):
         """
             Forward through a single reccurent cell.
 
@@ -84,18 +82,15 @@ class RecurrentCellWrapper(nn.Module):
         seq_len = x.shape[1] if batched else x.shape[0]
         if batched and self.batch_first:
             x = x.transpose(0, 1)
-
-        seq_result = []
         
+        seq_result = []
+
         for sid in range(seq_len):
-            result = self.cell(x[sid], hx)
-            seq_result.append(result)
+            input = x[sid]
+            for cell in self.cells:
+                hidden = cell(input, hidden)
+                input = hidden
+            seq_result.append(hidden)
 
-        if self.return_seq_output:
-            seq_result = torch.stack(seq_result, dim=0)
-            if self.batch_first:
-                seq_result = seq_result.transpose(0, 1)
-            return seq_result
-
-        return self.cell(x, hx)
+        return input
     

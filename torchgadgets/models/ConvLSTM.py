@@ -147,6 +147,7 @@ class ConvLSTM(nn.Module):
         self.model = nn.ModuleList(cells)
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
+
         # Required input shape: (seq_len, batch_size, in_channels, height, width)
         if self.batch_first:
             input = input.permute(1, 0, 2, 3, 4)
@@ -155,31 +156,30 @@ class ConvLSTM(nn.Module):
         if hidden_state is None:
             hidden_state = self.init_hidden(input.shape[1])
 
-        hidden_output = []
+        hid_h_output = []
+        hid_c_output = []
 
         seq_len = input.shape[0]
 
-        # Loop over the layers
-        for i, layer in enumerate(self.model):
+        for s_id in range(seq_len):
+            inp = input[s_id]
+            # Loop over the layers
+            for i, layer in enumerate(self.model):
+                hidden_state = layer(inp, hidden_state)
+                inp = hidden_state[0]
+            hid_h_output.append(hidden_state[0])
+            hid_c_output.append(hidden_state[1])
+        
 
-            hidden_c = hidden_state[i]
-            inner_output = []
-            
-            # For each layer loop over the sequences
-            for s_id in range(seq_len):
-                hidden_c = layer(input[s_id], hidden_c)
-                inner_output.append(hidden_c[0])
-            # Gather output from each layer for each sequence        
-            hidden_output.append(hidden_c)
+        hid_h_output = torch.stack(hid_h_output, dim=0)
+        hid_c_output = torch.stack(hid_c_output, dim=0)
 
-            # Take the 
-            input = torch.cat(inner_output, dim=0).view(input.shape[0], *inner_output[0].shape)
-        # Output of last layer: [batch_size, hidden_size, height, width]
-        output = hidden_c[0]
-        return output, (hidden_output, input)
+        if self.batch_first:
+            hid_h_output = hid_h_output.permute(1, 0, 2, 3, 4)
+            hid_c_output = hid_c_output.permute(1, 0, 2, 3, 4)
+
+
+        return hidden_state[0], (hid_h_output, hid_c_output)
 
     def init_hidden(self,batch_size):
-        init_states=[]#this is a list of tuples
-        for i in range(self.num_layers):
-            init_states.append(self.model[i].init_hidden(batch_size))
-        return init_states
+        return self.model[0].init_hidden(batch_size)
