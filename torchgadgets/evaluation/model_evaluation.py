@@ -41,7 +41,6 @@ def run_evaluation( model: torch.nn.Module,
         if i==num_iterations:
             break
         imgs, labels = imgs.to(device), labels.to(device)
-
         # apply preprocessing surch as flattening the imgs and create a one hot encodinh of the labels
         imgs, labels = data_augmentor((imgs, labels), train=False)
         output = model(imgs)
