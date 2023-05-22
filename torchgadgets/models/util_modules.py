@@ -40,15 +40,23 @@ class ProcessRecurrentOutput(nn.Module):
         such that it can be further used withing the neural network.
     
     """
-    def __init__(self, output_id, hidden_dim):
+    def __init__(self, output_id, hidden_dim, sequence=None, batch_first=False):
         super(ProcessRecurrentOutput, self).__init__()
         self.output_id = output_id
         self.hidden_dim = hidden_dim
+        self.sequence = sequence
+        self.batch_first = batch_first
         if isinstance(self.hidden_dim, int):
             self.hidden_dim = [self.hidden_dim]
     def forward(self, x):
         x = x[self.output_id]
+        if self.sequence is not None:
+            if self.batch_first:
+                x = x[:,self.sequence,...]
+            else:
+                x = x[self.sequence,...]
         x = x.contiguous().view(-1, *self.hidden_dim)
+        
         return x
     
 class RecurrentCellWrapper(nn.Module):

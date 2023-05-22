@@ -67,7 +67,7 @@ class NeuralNetwork(nn.Module):
                                                     nonlinearity=layer['activation'], 
                                                         num_layers=layer["num_layers"], 
                                                             batch_first=layer['batch_first']))
-                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size']))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size'], None if layer['sequence_out']=='all' else layer['sequence_out'], layer['batch_first']))
             elif layer["type"] == "LSTM":
                 layers.append(nn.LSTM(input_size=layer["input_size"], 
                                         hidden_size=layer["hidden_size"],
@@ -75,6 +75,7 @@ class NeuralNetwork(nn.Module):
                                                 dropout=layer['dropout'],
                                                     bidirectional=layer['bidirectional'],
                                                         batch_first=layer['batch_first']))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size'], None if layer['sequence_out']=='all' else layer['sequence_out'], layer['batch_first']))
 
             elif layer["type"] == "GRU":
                 layers.append(nn.GRU(input_size=layer["input_size"], 
@@ -82,13 +83,13 @@ class NeuralNetwork(nn.Module):
                                             num_layers=layer["num_layers"],
                                                 dropout=layer['dropout'],
                                                     bidirectional=layer['bidirectional']))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size'], None if layer['sequence_out']=='all' else layer['sequence_out'], layer['batch_first']))
                 
             elif layer["type"] == "ConvLSTM":
                 layers.append(ConvLSTM( layers = layer['layers'],
                                             input_dims=layer["input_size"], 
                                                 batch_first = layer['batch_first']))
-                layers.append(ProcessRecurrentOutput(layer['output_id'], (layer['layers'][-1]['hidden_size'], layer['input_size'][1], layer['input_size'][2])))
-            
+                layers.append(ProcessRecurrentOutput(layer['output_id'], (layer['layers'][-1]['hidden_size'], layer['input_size'][1], layer['input_size'][2]), None if layer['sequence_out']=='all' else layer['sequence_out'], layer['batch_first']))
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
                 layers.append(RecurrentCellWrapper( nn.RNNCell(input_size=layer["input_size"], 

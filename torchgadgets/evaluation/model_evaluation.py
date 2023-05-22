@@ -44,7 +44,6 @@ def run_evaluation( model: torch.nn.Module,
         # apply preprocessing surch as flattening the imgs and create a one hot encodinh of the labels
         imgs, labels = data_augmentor((imgs, labels), train=False)
         output = model(imgs)
-
         outputs.append(output.cpu())
         targets.append(labels.cpu())
         if criterion is not None:
