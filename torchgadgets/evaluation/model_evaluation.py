@@ -51,7 +51,6 @@ def run_evaluation( model: torch.nn.Module,
             loss = criterion(output, labels.float())
             losses.append(loss.cpu().item())
 
-    import ipdb; ipdb.set_trace()
     eval_metrics = evaluate(torch.stack(outputs, dim=0), torch.stack(targets, dim=0), config=config, metrics=evaluation_metrics)
 
     if criterion is None:

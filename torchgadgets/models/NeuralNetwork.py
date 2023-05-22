@@ -91,26 +91,30 @@ class NeuralNetwork(nn.Module):
             
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
-                layers.append(nn.RNNCell(input_size=layer["input_size"], 
-                                            hidden_size=layer["hidden_size"], 
-                                                dropout=layer['dropout'],
-                                                        nonlinearity=layer['activation'],
-                                                            batch_first=layer['batch_first']))
+                layers.append(RecurrentCellWrapper( nn.RNNCell(input_size=layer["input_size"], 
+                                                                hidden_size=layer["hidden_size"], 
+                                                                    dropout=layer['dropout'],
+                                                                            nonlinearity=layer['activation'],
+                                                                                batch_first=layer['batch_first']),
+                                                    batch_first=True))
             elif layer["type"] == "LSTMCell":
-                layers.append(nn.LSTMCell(input_size=layer["input_size"], 
-                                            hidden_size=layer["hidden_size"],
-                                                batch_first=layer['batch_first']))
+                layers.append(RecurrentCellWrapper( nn.LSTMCell(input_size=layer["input_size"], 
+                                                                    hidden_size=layer["hidden_size"],
+                                                                        batch_first=layer['batch_first']),
+                                                    batch_first=True))
             elif layer["type"] == "GRUCell":
-                layers.append(nn.GRUCell(input_size=layer["input_size"], 
-                                            hidden_size=layer["hidden_size"],
-                                                batch_first=layer['batch_first']))
+                layers.append(RecurrentCellWrapper( nn.GRUCell(input_size=layer["input_size"], 
+                                                                hidden_size=layer["hidden_size"],
+                                                                    batch_first=layer['batch_first']),
+                                                    batch_first=True))
                 
             elif layer["type"] == "ConvLSTMCell":
-                layers.append(ConvLSTMCell(input_size=layer["input_size"], 
-                                                hidden_size=layer["hidden_size"], 
-                                                    kernel_size=layer["kernel_size"],
-                                                        stride=layer["stride"],
-                                                            batchnorm=layer['batchnorm']))
+                layers.append(RecurrentCellWrapper( ConvLSTMCell(input_size=layer["input_size"], 
+                                                        hidden_size=layer["hidden_size"], 
+                                                            kernel_size=layer["kernel_size"],
+                                                                stride=layer["stride"],
+                                                                    batchnorm=layer['batchnorm']),
+                                                    batch_first=True))
             
             ##-- Normalization Layers --##
             elif layer['type'] =='batchnorm1d':
