@@ -37,7 +37,7 @@ class ConvLSTMCell(nn.Module):
 
         self.padding = int((self.kernel_size[0] - 1) // 2)
 
-        self.Conv = nn.Conv2d(self.in_channels+ self.hidden_size, 4*self.hidden_size, kernel_size=self.kernel_size, stride=self.stride, bias=self.bias)
+        self.Conv = nn.Conv2d(self.in_channels+ self.hidden_size, 4*self.hidden_size, kernel_size=self.kernel_size, stride=self.stride, bias=self.bias, padding=self.padding)
 
         if self.batchnorm:
             self.conv_bn = nn.BatchNorm2d(4*self.hidden_size)
@@ -47,23 +47,25 @@ class ConvLSTMCell(nn.Module):
 
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-
         hidden, c_t = hidden_state
 
         input_concat = torch.cat((input, hidden), dim=1)
-
-        A_t = self.Conv(input_concat)
-        if self.batchnorm:
-            A_t = self.conv_bn(A_t)
-        i_t = torch.sigmoid(A_t[:,0:self.hidden_size])
-        f_t = torch.sigmoid(A_t[:,self.hidden_size:2*self.hidden_size])
-        o_t = torch.sigmoid(A_t[:,2*self.hidden_size:3*self.hidden_size])
-        g_t = torch.tanh(A_t[:,3*self.hidden_size:4*self.hidden_size])
-        c_t = f_t * c_t + i_t * g_t
-        if self.batchnorm:
-            h_t = o_t * torch.tanh(self.out_bn(c_t))
-        else:
-            h_t = o_t * torch.tanh(c_t)
+        try:
+            A_t = self.Conv(input_concat)
+            if self.batchnorm:
+                A_t = self.conv_bn(A_t)
+            i_t = torch.sigmoid(A_t[:,0:self.hidden_size])
+            f_t = torch.sigmoid(A_t[:,self.hidden_size:2*self.hidden_size])
+            o_t = torch.sigmoid(A_t[:,2*self.hidden_size:3*self.hidden_size])
+            g_t = torch.tanh(A_t[:,3*self.hidden_size:4*self.hidden_size])
+            c_t = f_t * c_t + i_t * g_t
+            if self.batchnorm:
+                h_t = o_t * torch.tanh(self.out_bn(c_t))
+            else:
+                h_t = o_t * torch.tanh(c_t)
+        except Exception as e:
+            print(str(e))
+            import ipdb; ipdb.set_trace()
 
         return h_t, c_t
 
@@ -88,24 +90,25 @@ class ConvLSTM(nn.Module):
         self.input_size = (input_dims[1], input_dims[2])
         self.bias = bias
         self.batch_first = batch_first
+        self.num_layers = len(layers)
 
         cells = []
 
         for layer in layers:
-            cells.append(ConvLSTMCell( input_size=self.input_size, 
+            cells.append(ConvLSTMCell( input_size=input_dims, 
                                             hidden_size=layer['hidden_size'],
                                                 kernel_size=layer['kernel_size'], 
                                                     stride=layer['stride'],
                                                          batchnorm=layer['batchnorm'],
                                                             bias=self.bias))
         
-        self.model = nn.MOduleList(cells)
+        self.model = nn.ModuleList(cells)
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
-
         # Required input shape: (seq_len, batch_size, in_channels, height, width)
         if self.batch_first:
-            input = input.permute(1, 0, 2, 3)
+            input = input.permute(1, 0, 2, 3, 4)
+        import ipdb; ipdb.set_trace
 
         # If no initial hidden state is provided, initialize it with zeros
         if hidden_state is None:
@@ -134,5 +137,5 @@ class ConvLSTM(nn.Module):
     def init_hidden(self,batch_size):
         init_states=[]#this is a list of tuples
         for i in range(self.num_layers):
-            init_states.append(self.cell_list[i].init_hidden(batch_size))
+            init_states.append(self.model[i].init_hidden(batch_size))
         return init_states

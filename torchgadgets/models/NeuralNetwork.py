@@ -80,7 +80,7 @@ class NeuralNetwork(nn.Module):
                 layers.append(ConvLSTM( layers = layer['layers'],
                                             input_dims=layer["input_size"], 
                                                 batch_first = layer['batch_first']))
-                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['hidden_size']))
+                layers.append(ProcessRecurrentOutput(layer['output_id'], layer['layers'][-1]['hidden_size']))
             
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":

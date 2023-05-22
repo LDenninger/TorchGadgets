@@ -28,7 +28,6 @@ def run_evaluation( model: torch.nn.Module,
     # Setup model for evaluation
     model.eval()
     model.to(device)
-
     eval_metrics = {}
     with torch.no_grad():
         if suppress_output:
