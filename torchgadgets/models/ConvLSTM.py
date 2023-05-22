@@ -114,7 +114,7 @@ class ConvLSTMCell(nn.Module):
 class ConvLSTM(nn.Module):
 
     """
-        Convolutional LSTM  consisting of multiple layers of ConvLSTMCell modules.
+        Convolutional LSTM consisting of multiple layers of ConvLSTMCell modules.
     
     """
 
@@ -148,7 +148,6 @@ class ConvLSTM(nn.Module):
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
         # Required input shape: (seq_len, batch_size, in_channels, height, width)
-        import ipdb; ipdb.set_trace()
         if self.batch_first:
             input = input.permute(1, 0, 2, 3, 4)
 

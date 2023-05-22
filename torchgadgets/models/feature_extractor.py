@@ -94,7 +94,6 @@ class ResNet(nn.Module):
 
     def forward(self, input_):
         out = self.resnet(input_)
-        out = out.view(out.shape[0], -1)
         return out
     
 
@@ -128,7 +127,6 @@ class ConvNeXt(nn.Module):
 
     def forward(self, input_):
         out = self.convnext(input_)
-        out = out.view(out.shape[0], -1)
         return out
     
 class VGG(nn.Module):
@@ -167,7 +165,6 @@ class VGG(nn.Module):
 
     def forward(self, input_):
         out = self.vgg(input_)
-        out = out.view(out.shape[0], -1)
         return out
 
 class MobileNetV3(nn.Module):
@@ -200,7 +197,6 @@ class MobileNetV3(nn.Module):
 
     def forward(self, input_):
         out = self.mobilenet(input_)
-        out = out.view(out.shape[0], -1)
         return out
     
 class VisualTransformer(nn.Module):
@@ -227,5 +223,4 @@ class VisualTransformer(nn.Module):
 
     def forward(self, input_):
         out = self.vit(input_)
-        out = out.view(out.shape[0], -1)
         return out
