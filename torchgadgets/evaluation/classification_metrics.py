@@ -40,11 +40,13 @@ def evaluate(output, target, config: dict, metrics=None):
     eval_metrics = {}
 
     evaluation_metrics = EvaluationMetrics()
-
     if type(output)==list:
         output = torch.stack(output, dim=0)
     if type(target)==list:
         target = torch.stack(target, dim=0)
+
+    if config['evaluation']['target_to_pred']:
+        target, _ = torch.max(target, dim=-1)
     
     if metrics is None:
         metrics = config['evaluation']['metrics']
@@ -102,7 +104,7 @@ class EvaluationMetrics:
         """
         output = _data_eliminate_batch(output)
         target = _data_eliminate_batch(target)
-        top3_acc = top_k_accuracy_score(target, output, k=3)
+        top3_acc = top_k_accuracy_score(target, output, k=3, labels=config['dataset']['classes'])
 
         return [top3_acc]
     
@@ -119,7 +121,7 @@ class EvaluationMetrics:
         """
         output = _data_eliminate_batch(output)
         target = _data_eliminate_batch(target)
-        top5_acc = top_k_accuracy_score(target, output, k=5)
+        top5_acc = top_k_accuracy_score(target, output, k=5, labels=config['dataset']['classes'])
 
         return [top5_acc]
 
