@@ -96,19 +96,15 @@ class NeuralNetwork(nn.Module):
             elif layer["type"] == "RNNCell":
                 layers.append(RecurrentCellWrapper( nn.RNNCell(input_size=layer["input_size"], 
                                                                 hidden_size=layer["hidden_size"], 
-                                                                    dropout=layer['dropout'],
-                                                                            nonlinearity=layer['activation'],
-                                                                                batch_first=layer['batch_first']),
+                                                                    nonlinearity=layer['activation']),
                                                     batch_first=True))
             elif layer["type"] == "LSTMCell":
                 layers.append(RecurrentCellWrapper( nn.LSTMCell(input_size=layer["input_size"], 
-                                                                    hidden_size=layer["hidden_size"],
-                                                                        batch_first=layer['batch_first']),
+                                                                    hidden_size=layer["hidden_size"]),
                                                     batch_first=True))
             elif layer["type"] == "GRUCell":
                 layers.append(RecurrentCellWrapper( nn.GRUCell(input_size=layer["input_size"], 
-                                                                hidden_size=layer["hidden_size"],
-                                                                    batch_first=layer['batch_first']),
+                                                                hidden_size=layer["hidden_size"]),
                                                     batch_first=True))
                 
             elif layer["type"] == "ConvLSTMCell":
