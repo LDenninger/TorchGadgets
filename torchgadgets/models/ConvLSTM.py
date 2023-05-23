@@ -147,14 +147,13 @@ class ConvLSTM(nn.Module):
         self.model = nn.ModuleList(cells)
 
     def forward(self, input: torch.Tensor, hidden_state: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
-
         # Required input shape: (seq_len, batch_size, in_channels, height, width)
         if self.batch_first:
             input = input.permute(1, 0, 2, 3, 4)
 
         # If no initial hidden state is provided, initialize it with zeros
         if hidden_state is None:
-            hidden_state = self.init_hidden(input.shape[1])
+            init_hidden_state = self.init_hidden(input.shape[1])
 
         hid_h_output = []
         hid_c_output = []
@@ -165,6 +164,7 @@ class ConvLSTM(nn.Module):
             inp = input[s_id]
             # Loop over the layers
             for i, layer in enumerate(self.model):
+                hidden_state = init_hidden_state[i]
                 hidden_state = layer(inp, hidden_state)
                 inp = hidden_state[0]
             hid_h_output.append(hidden_state[0])
@@ -182,4 +182,7 @@ class ConvLSTM(nn.Module):
         return hidden_state[0], (hid_h_output, hid_c_output)
 
     def init_hidden(self,batch_size):
-        return self.model[0].init_hidden(batch_size)
+        init_h = []
+        for i in range(len(self.model)):
+            init_h.append(self.model[0].init_hidden(batch_size))
+        return init_h

@@ -92,10 +92,6 @@ class NeuralNetwork(nn.Module):
                                                 batch_first = layer['batch_first']))
                 layers.append(ProcessRecurrentOutput(layer['output_id'], (layer['layers'][-1]['hidden_size'], layer['input_size'][1], layer['input_size'][2]), None if layer['sequence_out']=='all' else layer['sequence_out'], layer['batch_first']))
             
-            elif layer['type'] == "RecurrentNetwork":
-                layers.append(RecurrentCellWrapper( ))
-            
-            
             ##-- Recurrent Cells --##
             elif layer["type"] == "RNNCell":
                 layers.append(RecurrentCellWrapper( nn.RNNCell(input_size=layer["input_size"], 

@@ -64,9 +64,9 @@ class RecurrentCellWrapper(nn.Module):
         A wrapper class for recurrent cells that implements.
     """
 
-    def __init__(self, cells: list[nn.Module], batch_first=False):
+    def __init__(self, cell: nn.Module, batch_first=False, sequence=None):
         super(RecurrentCellWrapper, self).__init__()
-        self.cells = cells
+        self.cell = cell
         self.batch_first = batch_first
 
     def forward(self, x, hidden=None):
@@ -87,10 +87,12 @@ class RecurrentCellWrapper(nn.Module):
 
         for sid in range(seq_len):
             input = x[sid]
-            for cell in self.cells:
-                hidden = cell(input, hidden)
-                input = hidden
+            hidden = self.cell(input, hidden)
+            input = hidden
             seq_result.append(hidden)
 
-        return input
+        if not torch.is_tensor(hidden):
+            hidden = hidden[0]
+
+        return hidden
     
