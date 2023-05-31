@@ -37,13 +37,13 @@ def build_model(layer_config):
         
         ##-- CNN Layers --##
         elif layer["type"] == "conv2d":
-            layers.append(nn.Conv2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
+            layers.append(nn.Conv2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"]))
         elif layer["type"] == "conv3d":
-            layers.append(nn.Conv3d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
+            layers.append(nn.Conv3d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"]))
         elif layer["type"] == "conv1d":
-            layers.append(nn.Conv1d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
-        elif layer["type"] == "TransConv2d":
-            layers.append(nn.ConvTranspose2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"]))
+            layers.append(nn.Conv1d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"]))
+        elif layer["type"] == "transConv2d":
+            layers.append(nn.ConvTranspose2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"]))
         #- Pooling -#
         elif layer["type"] == "maxpool2d":
             layers.append(nn.MaxPool2d(layer["kernel_size"], layer['stride']))
@@ -133,12 +133,19 @@ def build_model(layer_config):
             layers.append(Permute(layer['dim']))
         elif layer['type'] =='reshape':
             layers.append(Reshape(layer['shape']))
-        elif layers['type'] == 'unflatten':
+        elif layer['type'] == 'unflatten':
             layers.append(nn.Unflatten())
-
+        elif layer['type'] == 'repeat':
+            layers.append(Repeat(dim=layer['dim'], num_repeat=layer['num_repeat'], unsqueeze=layer['unsqueeze']))
         ##-- Activation Functions --##
         elif layer["type"] == "relu":
             layers.append(nn.ReLU())
+        elif layer['type'] == 'leaky_relu':
+            layers.append(nn.LeakyReLU(layer['negative_slope']))
+        elif layer['type'] == 'gelu':
+            layers.append(nn.GELU())
+        elif layer['type'] == 'sigmoid':
+            layers.append(nn.Sigmoid())
         elif layer["type"] == "softmax":
             layers.append(nn.Softmax(dim=-1))
 

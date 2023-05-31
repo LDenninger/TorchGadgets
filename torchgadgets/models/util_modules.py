@@ -9,7 +9,17 @@ class Reshape(nn.Module):
         self.shape = shape
     def forward(self, x):
         return torch.reshape(x, self.shape)
-    
+
+class Repeat(nn.Module):
+    def __init__(self, dim, num_repeat, unsqueeze=True):
+        super(Repeat, self).__init__()
+        self.dim = dim
+        self.num_repeat = num_repeat
+        self.unsqueeze = unsqueeze
+
+    def forward(self, x):
+        return torch.repeat_interleave(x.unsqueeze(self.dim), self.num_repeat, dim=self.dim) if self.unsqueeze else torch.repeat_interleave(x, self.num_repeat, dim=self.dim)
+
 
 class Permute(nn.Module):
     def __init__(self, dims):

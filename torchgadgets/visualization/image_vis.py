@@ -37,6 +37,8 @@ def visualize_dataset(dataset, data_augmentor=None, ind: list=None, label_names:
         for y in range(ax.shape[1]):
             ax[x][y].axis("off")
 
+    return fig
+
 def visualize_dataloader(dataset, data_augmentor=None, label_names: list=None, layout= (4,4)):
     NUM_IMG = layout[0]*layout[1]
 
@@ -68,3 +70,5 @@ def visualize_dataloader(dataset, data_augmentor=None, label_names: list=None, l
         for y in range(ax.shape[1]):
             ax[x][y].axis("off")
 
+
+    return fig
