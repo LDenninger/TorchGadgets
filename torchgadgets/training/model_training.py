@@ -63,16 +63,26 @@ def trainNN(config,
     if data_augmentor is None:
         data_augmentor = ImageDataAugmentor(config=config['pre_processing'])
 
-
-    train_model(model=model, 
-                    config=config, 
-                        train_loader=train_loader, 
-                            val_loader=test_loader, 
-                                optimizer=optimizer, 
-                                    data_augmentor=data_augmentor, 
-                                        criterion=criterion, 
-                                            scheduler=scheduler,
-                                                logger=logger)
+    if config['model']=='nn':
+        train_model(model=model, 
+                        config=config, 
+                            train_loader=train_loader, 
+                                val_loader=test_loader, 
+                                    optimizer=optimizer, 
+                                        data_augmentor=data_augmentor, 
+                                            criterion=criterion, 
+                                                scheduler=scheduler,
+                                                    logger=logger)
+    elif config['model']=='vae':
+         train_vae(model=model, 
+                        config=config, 
+                            train_loader=train_loader, 
+                                val_loader=test_loader, 
+                                    optimizer=optimizer, 
+                                        data_augmentor=data_augmentor, 
+                                            criterion=criterion, 
+                                                scheduler=scheduler,
+                                                    logger=logger)
     
     if return_all:
         return model, train_loader, test_loader, data_augmentor, logger

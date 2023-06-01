@@ -43,7 +43,7 @@ def build_model(layer_config):
         elif layer["type"] == "conv1d":
             layers.append(nn.Conv1d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"]))
         elif layer["type"] == "transConv2d":
-            layers.append(nn.ConvTranspose2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"]))
+            layers.append(nn.ConvTranspose2d(layer["in_channels"], layer["out_channels"], layer["kernel_size"], layer["stride"], layer["padding"], output_padding=layer["output_padding"]))
         #- Pooling -#
         elif layer["type"] == "maxpool2d":
             layers.append(nn.MaxPool2d(layer["kernel_size"], layer['stride']))
