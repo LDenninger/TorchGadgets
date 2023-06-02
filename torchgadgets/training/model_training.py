@@ -18,7 +18,8 @@ def trainNN(config,
                                     optimizer = None,
                                         data_augmentor = None,
                                             scheduler = None,
-            return_all=True):
+            return_all=True,
+            suppress_output=False):
     """
         Script for a basic trainig of the neural network. 
         All relevant parts for the training can either be provided as an argument.
@@ -82,7 +83,8 @@ def trainNN(config,
                                         data_augmentor=data_augmentor, 
                                             criterion=criterion, 
                                                 scheduler=scheduler,
-                                                    logger=logger)
+                                                    logger=logger,
+                                                        suppress_output=suppress_output)
     
     if return_all:
         return model, train_loader, test_loader, data_augmentor, logger

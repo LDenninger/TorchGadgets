@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 from ..evaluation import *
 
+
 ###--- Training Scripts ---###
 def train_model(model, config, train_loader, val_loader, optimizer, criterion,  data_augmentor, scheduler=None, logger=None):
 
@@ -61,8 +62,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
                 logger.log_data(data={'train_loss': loss.cpu().float().item()}, epoch=epoch+1, iteration=i+1, model = model, optimizer = optimizer)
             #tr_metric = eval_resolve(output, label, config)['accuracy'][0]
             #raining_metrics.append(tr_metric)
-            outputs.append(output.cpu().detach())
-            targets.append(label.cpu().detach())
+    
             
             progress_bar.set_description(f'Loss: {loss.cpu().item():.4f}')
             
@@ -89,7 +89,7 @@ def train_model(model, config, train_loader, val_loader, optimizer, criterion,  
 
     
         
-def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  data_augmentor, scheduler=None, logger=None):
+def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  data_augmentor, scheduler=None, logger=None, suppress_output=False):
 
     ###--- Hyperparameters ---###
 
@@ -127,8 +127,13 @@ def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  da
         #training_metrics = []
 
         ###--- Training Epoch ---###
-        progress_bar = tqdm(enumerate(train_loader), total=config['num_iterations'])
+        if not suppress_output:
+            progress_bar = tqdm(enumerate(train_loader), total=config['num_iterations'])
+        else:
+            progress_bar = enumerate(train_loader)
         for i, (img, label) in progress_bar:
+            if i==config['num_iterations']:
+                    break
             img = img.to(DEVICE)
             label = label.to(DEVICE)
             # Apply data augmentation and pre-processing
@@ -148,16 +153,12 @@ def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  da
                 logger.log_data(data={'train_loss': loss.item(), 'mse': mse.item(), 'kld': kld.item()}, epoch=epoch+1, iteration=i+1, model = model, optimizer = optimizer)
             #tr_metric = eval_resolve(output, label, config)['accuracy'][0]
             #raining_metrics.append(tr_metric)
-            outputs.append(output.cpu().detach())
-            targets.append(label.cpu().detach())
-            
-            progress_bar.set_description(f'Loss: {loss.cpu().item():.4f}')
-            
+            if not suppress_output:
+                progress_bar.set_description(f'Loss: {loss.cpu().item():.4f}')
             if scheduler is not None:
                 # Learning rate scheduler takes a step
-                scheduler.step(i+1)
-        
-        
+                    scheduler.step(i+1)
+            outputs.append(1.0)
         ###--- Evaluation Epoch ---###
         if epoch % evaluation_config['frequency'] == 0:
             evaluation_metrics, eval_loss, mse, kld = run_vae_evaluation(model,data_augmentor,val_loader,config, criterion=criterion, suppress_output=False)
