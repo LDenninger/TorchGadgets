@@ -143,7 +143,7 @@ def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  da
             # Compute output of the model
             output, (z, mu, sigma) = model(img_augm)
             # Compute loss
-            loss, (mse, kld) = criterion(output.float(), img_augm.float(), mu, sigma)
+            loss, (mse, kld) = criterion(output.float(), img.float(), mu, sigma)
             # Backward pass to compute the gradients wrt to the loss
             loss.backward()
             # Update weights
@@ -154,7 +154,7 @@ def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  da
             #tr_metric = eval_resolve(output, label, config)['accuracy'][0]
             #raining_metrics.append(tr_metric)
             if not suppress_output:
-                progress_bar.set_description(f'Loss: {loss.cpu().item():.4f}')
+                progress_bar.set_description(f'Loss (mse/kld): {loss.cpu().item():.4f} ({mse.cpu().item():.4f}/{kld.cpu().item():.4f})')
             if scheduler is not None:
                 # Learning rate scheduler takes a step
                     scheduler.step(i+1)
@@ -168,8 +168,8 @@ def train_vae(model, config, train_loader, val_loader, optimizer, criterion,  da
             #logger.log_data(epoch=epoch+1, data={'train_accuracy': training_metrics})
             logger.log_data(epoch=epoch+1, data=evaluation_metrics)
             logger.log_data(epoch=epoch+1, data={'eval_loss': eval_loss})
-            logger.log_data(epoch=0, data={'mse': mse})
-            logger.log_data(epoch=0, data={'kld': kld})
+            logger.log_data(epoch=0, data={'eval_mse': mse})
+            logger.log_data(epoch=0, data={'eval_kld': kld})
         
         # If the logger is activated and saves the data internally we can print out the data after each epoch
         if logger is not None and logger.save_internal:

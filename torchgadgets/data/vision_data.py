@@ -322,7 +322,7 @@ class ImageDataAugmentor:
                 if process_step['eval']:
                     eval_augmentation.append(self._permute)
             elif process_step['type'] =='resize':
-                self.resizer = tv.transforms.Resize(process_step['size'])
+                self.resizer = tv.transforms.Resize(process_step['size'], antialias=True)
                 if process_step['train']:
                     train_augmentation.append(self._resize)
                 if process_step['eval']:
@@ -418,7 +418,7 @@ class ImageDataAugmentor:
                 if process_step['eval']:
                     eval_augmentation.append(self._dynamic_random_crop)
             elif process_step['type'] == 'random_resized_crop':
-                self.random_resized_cropper = tv.transforms.RandomResizedCrop(process_step['size'], process_step['scale'], process_step['ratio'])
+                self.random_resized_cropper = tv.transforms.RandomResizedCrop(process_step['size'], process_step['scale'], process_step['ratio'], antialias=True)
                 if process_step['train']:
                     train_augmentation.append(self._random_resized_crop)
                 if process_step['eval']:

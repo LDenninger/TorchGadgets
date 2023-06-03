@@ -105,7 +105,7 @@ def run_vae_evaluation( model: torch.nn.Module,
         outputs.append(output.cpu())
         targets.append(labels.cpu())
         if criterion is not None:
-            loss, (mse, kld) = criterion(output.float(), img_augm.float(), mu, sigma)
+            loss, (mse, kld) = criterion(output.float(), imgs.float(), mu, sigma)
             losses.append(loss.cpu().item())
             mse_list.append(mse.cpu().item())
             kld_list.append(kld.cpu().item())

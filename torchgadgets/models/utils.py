@@ -53,6 +53,8 @@ def build_model(layer_config):
             layers.append(nn.AdaptiveMaxPool2d(layer["output_size"]))
         elif layer["type"] == "ada_avgpool2d":
             layers.append(nn.AdaptiveAvgPool2d(layer["output_size"]))
+        elif layer['type'] == 'upsample':
+            layers.append(nn.Upsample(scale_factor=layer['scale']))
 
 
 
