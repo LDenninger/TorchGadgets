@@ -48,17 +48,21 @@ class SchedulerManager:
                 self.epoch_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, self.scheduler_config['epoch_scheduler']['step_size'], self.scheduler_config['epoch_scheduler']['gamma'])
             elif self.scheduler_config['epoch_scheduler']['type']=='exponential':
                 self.epoch_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, self.scheduler_config['epoch_scheduler']['gamma'])
+            elif self.scheduler_config['epoch_scheduler']['type']=='reduce_on_plat':
+                self.epoch_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=self.scheduler_config['epoch_scheduler']['patience'], factor=self.scheduler_config['epoch_scheduler']['factor'])
+
             
         if self.scheduler_config['iteration_scheduler'] is not None:
             if self.scheduler_config['iteration_scheduler']['type']=='warmup_cosine_decay':
                 self.iteration_scheduler = WarmUpCosineDecayLR(self.optimizer, self.scheduler_config['iteration_scheduler']['warmup_steps'], self._num_iterations, self._base_lr)
-            elif self.scheduler_config['epoch_scheduler']['type']=='lambda':
-                self.iteration_scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer,self.scheduler_config['epoch_scheduler']['lambda'])
-            elif self.scheduler_config['epoch_scheduler']['type']=='step':
-                self.iteration_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, self.scheduler_config['epoch_scheduler']['step_size'], self.scheduler_config['epoch_scheduler']['gamma'])
-            elif self.scheduler_config['epoch_scheduler']['type']=='exponential':
-                self.iteration_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, self.scheduler_config['epoch_scheduler']['gamma'])
-                
+            elif self.scheduler_config['iteration_scheduler']['type']=='lambda':
+                self.iteration_scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer,self.scheduler_config['iteration_scheduler']['lambda'])
+            elif self.scheduler_config['iteration_scheduler']['type']=='step':
+                self.iteration_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, self.scheduler_config['iteration_scheduler']['step_size'], self.scheduler_config['iteration_scheduler']['gamma'])
+            elif self.scheduler_config['iteration_scheduler']['type']=='exponential':
+                self.iteration_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, self.scheduler_config['iteration_scheduler']['gamma'])
+            elif self.scheduler_config['iteration_scheduler']['type']=='reduce_on_plat':
+                self.iteration_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=self.scheduler_config['iteration_scheduler']['patience'], factor=self.scheduler_config['iteration_scheduler']['factor'])
 
 class  WarmUpCosineDecayLR():
     def __init__(self, optimizer, warmup_steps, num_steps, base_lr) -> None:
