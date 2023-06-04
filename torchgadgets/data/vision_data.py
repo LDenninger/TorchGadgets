@@ -315,6 +315,13 @@ class ImageDataAugmentor:
                     train_augmentation.append(self._normalize)
                 if process_step['eval']:
                     eval_augmentation.append(self._normalize)
+            elif process_step['type'] == 'normalize_custom':
+                self.normalizer_gray = tv.transforms.Normalize(mean=process_step['mean'], std=process_step['std'])
+                self.normalizer_rgb = tv.transforms.Normalize(mean=process_step['mean'], std=process_step['std'])
+                if process_step['train']:
+                    train_augmentation.append(self._normalize)
+                if process_step['eval']:
+                    eval_augmentation.append(self._normalize)
             elif process_step['type'] == 'permute':
                 self.permute_dim = process_step['dim']
                 if process_step['train']:

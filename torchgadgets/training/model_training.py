@@ -64,7 +64,7 @@ def trainNN(config,
     if data_augmentor is None:
         data_augmentor = ImageDataAugmentor(config=config['pre_processing'])
 
-    if config['model']=='nn':
+    if config['model']['type']=='nn':
         train_model(model=model, 
                         config=config, 
                             train_loader=train_loader, 
@@ -74,7 +74,7 @@ def trainNN(config,
                                             criterion=criterion, 
                                                 scheduler=scheduler,
                                                     logger=logger)
-    elif config['model']=='vae':
+    elif config['model']['type']=='vae':
          train_vae(model=model, 
                         config=config, 
                             train_loader=train_loader, 
