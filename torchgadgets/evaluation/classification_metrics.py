@@ -270,7 +270,8 @@ class EvaluationMetrics:
         f1 = f1_score(target, predicted, labels=CLASSES)
 
         return f1
-
+    
+    
     def _evaluation_confusion_matrix(self, output: torch.Tensor, target: torch.Tensor, config: dict) -> list:
 
         # Build confusion matrix
