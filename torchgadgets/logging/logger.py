@@ -6,7 +6,7 @@ import os
 from pathlib import Path as P
 
 
-class Logger():
+class LoggerOld():
     def __init__(self,
                 log_dir = None,
                 checkpoint_dir = None,
